@@ -1,7 +1,6 @@
 {
   "name": "HA Energy Dashboard",
   "content_in_root": true,
-  "filename": "panel.js",
   "render_readme": true,
   "homeassistant": "2023.1.0"
 }
