@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Energy Dashboard</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="stylesheet" href="styles.css?v=28">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.2.0/dist/chartjs-plugin-zoom.min.js"></script>
+    <script src="config.js?v=28"></script>
+</head>
+<body>
+    <div class="energy-app">
+        <!-- Header -->
+        <header class="energy-header">
+            <div class="header-left">
+                <div class="energy-logo">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <rect x="4" y="4" width="6" height="6" rx="1" fill="#4a9eff"/>
+                        <rect x="14" y="4" width="6" height="6" rx="1" fill="#4a9eff"/>
+                        <rect x="4" y="14" width="6" height="6" rx="1" fill="#4a9eff"/>
+                        <rect x="14" y="14" width="6" height="6" rx="1" fill="#4a9eff"/>
+                    </svg>
+                    <span>Energy</span>
+                    <span class="logo-subtitle">Dashboard</span>
+                </div>
+            </div>
+            <nav class="energy-nav">
+                <button class="nav-item active" data-tab="dashboard">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+                    Dashboard
+                </button>
+                <button class="nav-item" data-tab="sensors">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
+                    Sensors
+                </button>
+                <button class="nav-item" data-tab="invoice">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                    Kosten
+                </button>
+                <button class="nav-item" data-tab="heatpump">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 4l2 5-2 5h-1l2-5-2-5h1zm3 0l2 5-2 5h-1l2-5-2-5h1z"/></svg>
+                    Wärmepumpe
+                </button>
+                <button class="nav-item" data-tab="settings">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 00-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1112 8.4a3.6 3.6 0 010 7.2z"/></svg>
+                    Einstellungen
+                </button>
+            </nav>
+            <div class="header-right"></div>
+        </header>
+
+        <!-- Shared Custom Range Popup (outside tab-content so it's always accessible) -->
+        <div class="custom-range-popup" id="custom-range-popup">
+            <div class="custom-range-row">
+                <label>Von</label>
+                <input type="date" id="custom-range-start" class="custom-range-input">
+            </div>
+            <div class="custom-range-row">
+                <label>Bis</label>
+                <input type="date" id="custom-range-end" class="custom-range-input">
+            </div>
+            <button class="custom-range-apply" id="custom-range-apply">Anwenden</button>
+        </div>
+
+        <!-- ═══ Dashboard Tab ═══ -->
+        <div class="tab-content" data-tab="dashboard">
+
+            <!-- Time Selector -->
+            <div class="time-selector">
+                <button class="time-btn active" data-period="today">Heute</button>
+                <button class="time-btn" data-period="yesterday">Gestern</button>
+                <button class="time-btn" data-period="this_week">Diese Woche</button>
+                <button class="time-btn" data-period="last_week">Letzte Woche</button>
+                <button class="time-btn" data-period="this_month">Dieser Monat</button>
+                <button class="time-btn" data-period="last_month">Letzter Monat</button>
+                <button class="time-btn" data-period="this_year">Dieses Jahr</button>
+                <button class="time-btn" data-period="last_year">Letztes Jahr</button>
+                <button class="time-btn custom-range-trigger" data-period="custom">Custom</button>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card consumption">
+                    <div class="stat-header">
+                        <span class="stat-icon">⚡</span>
+                        <span class="stat-label">VERBRAUCH</span>
+                    </div>
+                    <div class="stat-value">
+                        <span id="consumption-value">—</span>
+                        <span class="stat-unit">kWh</span>
+                    </div>
+                </div>
+                <div class="stat-card production">
+                    <div class="stat-header">
+                        <span class="stat-icon">☀️</span>
+                        <span class="stat-label">ERZEUGUNG</span>
+                    </div>
+                    <div class="stat-value">
+                        <span id="production-value">—</span>
+                        <span class="stat-unit">kWh</span>
+                    </div>
+                </div>
+                <div class="stat-card exported">
+                    <div class="stat-header">
+                        <span class="stat-icon">📤</span>
+                        <span class="stat-label">EINSPEISUNG</span>
+                    </div>
+                    <div class="stat-value">
+                        <span id="exported-value">—</span>
+                        <span class="stat-unit">kWh</span>
+                    </div>
+                </div>
+                <div class="stat-card self-consumed">
+                    <div class="stat-header">
+                        <span class="stat-icon">🏠</span>
+                        <span class="stat-label">EIGENVERBRAUCH</span>
+                    </div>
+                    <div class="stat-value">
+                        <span id="self-consumed-value">—</span>
+                        <span class="stat-unit">kWh</span>
+                    </div>
+                </div>
+                <div class="stat-card heatpump">
+                    <div class="stat-header">
+                        <span class="stat-icon">🔥</span>
+                        <span class="stat-label">WÄRMEPUMPE</span>
+                    </div>
+                    <div class="stat-value">
+                        <span id="heatpump-value">—</span>
+                        <span class="stat-unit">kWh</span>
+                    </div>
+                    <div class="stat-sub" id="heatpump-cop"></div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <!-- Energy Flow -->
+                <div class="energy-flow-section">
+                    <div class="section-card">
+                        <div class="section-header">
+                            <div>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
+                                <span>Energiefluss</span>
+                            </div>
+                            <span class="flow-live-badge">LIVE</span>
+                        </div>
+
+                        <!-- Pure CSS Energy Flow -->
+                        <div class="flow-diagram">
+                            <!-- Top: Solar -->
+                            <div class="flow-top-row">
+                                <div class="flow-node">
+                                    <div class="flow-node-icon flow-icon-solar">
+                                        <svg viewBox="0 0 48 48" width="48" height="48"><rect x="8" y="14" width="32" height="20" rx="2" fill="none" stroke="#10b981" stroke-width="2"/><line x1="16" y1="14" x2="16" y2="34" stroke="#10b981" stroke-width="1.5"/><line x1="24" y1="14" x2="24" y2="34" stroke="#10b981" stroke-width="1.5"/><line x1="32" y1="14" x2="32" y2="34" stroke="#10b981" stroke-width="1.5"/><line x1="8" y1="24" x2="40" y2="24" stroke="#10b981" stroke-width="1.5"/></svg>
+                                    </div>
+                                    <div class="flow-node-label">SOLAR</div>
+                                    <div class="flow-node-value" id="flow-solar-value">0 W</div>
+                                </div>
+                            </div>
+
+                            <!-- Vertical connector: Solar → House -->
+                            <div class="flow-connector-v">
+                                <div class="flow-line-v" id="flow-solar-house"></div>
+                            </div>
+
+                            <!-- Bottom: Grid — House — Battery -->
+                            <div class="flow-bottom-row">
+                                <div class="flow-node">
+                                    <div class="flow-node-icon flow-icon-grid">
+                                        <svg viewBox="0 0 48 48" width="48" height="48"><line x1="24" y1="4" x2="24" y2="44" stroke="#ef4444" stroke-width="2.5"/><line x1="12" y1="14" x2="36" y2="14" stroke="#ef4444" stroke-width="2"/><line x1="12" y1="24" x2="36" y2="24" stroke="#ef4444" stroke-width="2"/><line x1="12" y1="34" x2="36" y2="34" stroke="#ef4444" stroke-width="2"/></svg>
+                                    </div>
+                                    <div class="flow-node-label" id="flow-grid-label">NETZ</div>
+                                    <div class="flow-node-value" id="flow-grid-value">0 W</div>
+                                </div>
+
+                                <!-- Connector: Grid ↔ House -->
+                                <div class="flow-connector-h">
+                                    <div class="flow-line-h flow-line-red" id="flow-grid-house"></div>
+                                    <div class="flow-line-h flow-line-blue" id="flow-house-grid" style="display:none"></div>
+                                </div>
+
+                                <div class="flow-node">
+                                    <div class="flow-node-icon flow-icon-house">
+                                        <svg viewBox="0 0 48 48" width="48" height="48"><path d="M24 6L6 22h6v18h24V22h6L24 6z" fill="none" stroke="#4a9eff" stroke-width="2" stroke-linejoin="round"/><rect x="18" y="28" width="12" height="12" fill="none" stroke="#4a9eff" stroke-width="1.5" rx="1"/></svg>
+                                    </div>
+                                    <div class="flow-node-label">HAUS</div>
+                                    <div class="flow-node-value" id="flow-house-value">0 W</div>
+                                </div>
+
+                                <!-- Connector: House ↔ Battery -->
+                                <div class="flow-connector-h">
+                                    <div class="flow-line-h flow-line-yellow" id="flow-battery-house"></div>
+                                    <div class="flow-line-h flow-line-green" id="flow-solar-battery" style="display:none"></div>
+                                </div>
+
+                                <div class="flow-node">
+                                    <div class="flow-node-icon flow-icon-battery">
+                                        <svg viewBox="0 0 48 48" width="48" height="48"><rect x="14" y="12" width="20" height="28" rx="3" fill="none" stroke="#fbbf24" stroke-width="2"/><rect x="19" y="8" width="10" height="4" rx="1" fill="none" stroke="#fbbf24" stroke-width="1.5"/><rect x="17" y="26" width="14" height="10" rx="1" fill="#fbbf2433"/></svg>
+                                    </div>
+                                    <div class="flow-node-label" id="flow-battery-label">BATTERIE</div>
+                                    <div class="flow-node-value" id="flow-battery-value">0 W</div>
+                                    <div class="flow-node-sub" id="flow-battery-soc">0%</div>
+                                </div>
+                            </div>
+
+                            <!-- Vertical connector: House → Heatpump -->
+                            <div class="flow-connector-v">
+                                <div class="flow-line-v flow-line-orange" id="flow-house-wp"></div>
+                            </div>
+
+                            <!-- Bottom: Wärmepumpe -->
+                            <div class="flow-wp-row">
+                                <div class="flow-node">
+                                    <div class="flow-node-icon flow-icon-wp">
+                                        <svg viewBox="0 0 48 48" width="48" height="48"><circle cx="24" cy="24" r="14" fill="none" stroke="#f97316" stroke-width="2"/><path d="M20 14 L24 24 L20 34" fill="none" stroke="#f97316" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M28 14 L24 24 L28 34" fill="none" stroke="#f97316" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    </div>
+                                    <div class="flow-node-label">WÄRMEPUMPE</div>
+                                    <div class="flow-node-value" id="flow-wp-value">0 W</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Flow Stats -->
+                        <div class="flow-stats-grid">
+                            <div class="flow-stat">
+                                <div class="flow-stat-label">NETZBEZUG</div>
+                                <div class="flow-stat-value"><span id="market-in">—</span> <span class="flow-stat-unit">kWh</span></div>
+                            </div>
+                            <div class="flow-stat">
+                                <div class="flow-stat-label">EINSPEISUNG</div>
+                                <div class="flow-stat-value"><span id="market-out">—</span> <span class="flow-stat-unit">kWh</span></div>
+                            </div>
+                            <div class="flow-stat">
+                                <div class="flow-stat-label">BATTERIE GELADEN</div>
+                                <div class="flow-stat-value"><span id="battery-charged">—</span> <span class="flow-stat-unit">kWh</span></div>
+                            </div>
+                            <div class="flow-stat">
+                                <div class="flow-stat-label">BATTERIE ENTLADEN</div>
+                                <div class="flow-stat-value"><span id="battery-discharged">—</span> <span class="flow-stat-unit">kWh</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Key Metrics -->
+                <div class="key-metrics-section">
+                    <div class="section-card">
+                        <div class="section-header">
+                            <div>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>
+                                <span>Kennzahlen</span>
+                            </div>
+                        </div>
+                        <div class="metrics-list">
+                            <div class="metric-item">
+                                <div class="metric-label">Autarkiegrad</div>
+                                <div class="metric-value-container">
+                                    <div class="metric-value"><span id="self-sufficiency">—</span>%</div>
+                                    <div class="metric-bar"><div class="metric-bar-fill" id="self-sufficiency-bar"></div></div>
+                                </div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-label">Eigenverbrauch</div>
+                                <div class="metric-value"><span id="self-consumed-metric">—</span></div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-label">Batterie SoC</div>
+                                <div class="metric-value-container">
+                                    <div class="metric-value"><span id="battery-soc">—</span>%</div>
+                                    <div class="metric-bar"><div class="metric-bar-fill battery-bar" id="battery-soc-bar"></div></div>
+                                </div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-label">Stromkosten</div>
+                                <div class="metric-value cost"><span id="energy-cost">—</span> €</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-label">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#10b981"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg>
+                                    Ersparnis
+                                </div>
+                                <div class="metric-value success"><span id="energy-savings">—</span> €</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart -->
+            <div class="chart-section">
+                <div class="section-card">
+                    <div class="section-header">
+                        <div>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h2v8H3v-8zm4-6h2v14H7V7zm4-4h2v18h-2V3zm4 8h2v10h-2V11zm4-3h2v13h-2V8z"/></svg>
+                            <span>Energieprofil — <span id="chart-period">Gestern</span></span>
+                        </div>
+                        <div class="chart-toggle">
+                            <button class="toggle-btn active" data-unit="kwh">kWh</button>
+                            <button class="toggle-btn" data-unit="kw">kW</button>
+                        </div>
+                    </div>
+                    <div class="chart-container" style="position:relative; height:350px;">
+                        <canvas id="energy-chart"></canvas>
+                    </div>
+                    <button class="reset-zoom-btn" id="reset-zoom-btn" style="display:none">↩ Reset Zoom</button>
+                    <div class="chart-hint">Scroll to zoom · Drag to pan · Key metrics update with visible range</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Other Tabs -->
+        <div class="tab-content" data-tab="sensors" style="display:none">
+            <div class="tab-placeholder"><h2>Sensor-Übersicht</h2><p>Kommt in einem zukünftigen Update.</p></div>
+        </div>
+        <div class="tab-content" data-tab="invoice" style="display:none">
+            <!-- Invoice Time Selector -->
+            <div class="time-selector inv-time-selector">
+                <button class="time-btn inv-time-btn active" data-period="today">Heute</button>
+                <button class="time-btn inv-time-btn" data-period="yesterday">Gestern</button>
+                <button class="time-btn inv-time-btn" data-period="this_week">Diese Woche</button>
+                <button class="time-btn inv-time-btn" data-period="last_week">Letzte Woche</button>
+                <button class="time-btn inv-time-btn" data-period="this_month">Dieser Monat</button>
+                <button class="time-btn inv-time-btn" data-period="last_month">Letzter Monat</button>
+                <button class="time-btn inv-time-btn" data-period="this_year">Dieses Jahr</button>
+                <button class="time-btn inv-time-btn" data-period="last_year">Letztes Jahr</button>
+                <button class="time-btn custom-range-trigger" data-period="custom">Custom</button>
+            </div>
+            <div class="invoice-page">
+                <!-- Demo-style Header -->
+                <h2 class="invoice-title">Kostenschaetzung — <span id="invoice-period-label">Heute</span></h2>
+                <div class="invoice-badges">
+                    <span class="inv-badge consumption">⚡ <span id="inv-badge-consumption">—</span> Verbrauch</span>
+                    <span class="inv-badge production">☀️ <span id="inv-badge-production">—</span> Erzeugung</span>
+                    <span class="inv-badge exported">📤 <span id="inv-badge-exported">—</span> Einspeisung</span>
+                    <span class="inv-badge imported">🔌 <span id="inv-badge-imported">—</span> Netzbezug</span>
+                </div>
+
+                <div class="inv-dynamic-warn" id="inv-dynamic-warn" style="display:none"></div>
+
+                <!-- Summary Cards -->
+                <div class="invoice-summary">
+                    <div class="invoice-summary-card cost">
+                        <span class="invoice-summary-label">Stromkosten</span>
+                        <span class="invoice-summary-value" id="inv-total-cost">0.00 €</span>
+                    </div>
+                    <div class="invoice-summary-card revenue">
+                        <span class="invoice-summary-label">Einspeisung</span>
+                        <span class="invoice-summary-value" id="inv-total-revenue">0.00 €</span>
+                    </div>
+                    <div class="invoice-summary-card savings">
+                        <span class="invoice-summary-label">Eigenverbrauch-Ersparnis</span>
+                        <span class="invoice-summary-value" id="inv-total-savings">0.00 €</span>
+                    </div>
+                    <div class="invoice-summary-card net">
+                        <span class="invoice-summary-label">Zu zahlen</span>
+                        <span class="invoice-summary-value" id="inv-net-balance">0.00 €</span>
+                    </div>
+                </div>
+
+                <!-- Detail Table -->
+                <div class="invoice-section">
+                    <table class="invoice-table">
+                        <thead>
+                            <tr><th>Position</th><th>Menge</th><th>Tarif</th><th class="inv-amount">Betrag</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr class="inv-section-label"><td colspan="4">Stromkosten</td></tr>
+                            <tr class="inv-info-row">
+                                <td>Gesamtverbrauch</td>
+                                <td id="inv-consumption-kwh">—</td>
+                                <td></td>
+                                <td class="inv-amount"></td>
+                            </tr>
+                            <tr class="inv-expandable" id="inv-import-row">
+                                <td>Netzbezug <span class="inv-expand-icon">▶</span></td>
+                                <td id="inv-import-kwh">—</td>
+                                <td id="inv-import-rate">—</td>
+                                <td class="inv-amount" id="inv-import-cost">—</td>
+                            </tr>
+                            <tr class="inv-detail-row" id="inv-import-detail" style="display:none">
+                                <td colspan="4">
+                                    <div class="inv-hourly-grid" id="inv-hourly-grid"></div>
+                                </td>
+                            </tr>
+                            <tr id="inv-base-fee-row">
+                                <td>Grundgebuehr (anteilig)</td>
+                                <td id="inv-base-fee-days">—</td>
+                                <td id="inv-base-fee-monthly">—</td>
+                                <td class="inv-amount" id="inv-base-fee-cost">—</td>
+                            </tr>
+                            <tr class="inv-section-label"><td colspan="4">Einspeisevergütung</td></tr>
+                            <tr class="inv-revenue-row">
+                                <td>Einspeisung ins Netz</td>
+                                <td id="inv-export-kwh">—</td>
+                                <td id="inv-export-rate">—</td>
+                                <td class="inv-amount" id="inv-export-revenue">—</td>
+                            </tr>
+                            <tr class="inv-section-label"><td colspan="4">Eigenverbrauch</td></tr>
+                            <tr class="inv-savings-row">
+                                <td>Vermiedener Netzbezug</td>
+                                <td id="inv-self-kwh">—</td>
+                                <td id="inv-self-rate">—</td>
+                                <td class="inv-amount" id="inv-self-savings">—</td>
+                            </tr>
+                            <tr class="inv-section-label" id="inv-wp-section" style="display:none"><td colspan="4">Wärmepumpe</td></tr>
+                            <tr class="inv-expandable inv-wp-row" id="inv-wp-row" style="display:none">
+                                <td>Wärmepumpe gesamt <span class="inv-expand-icon">▶</span></td>
+                                <td id="inv-wp-kwh">—</td>
+                                <td id="inv-wp-rate">—</td>
+                                <td class="inv-amount" id="inv-wp-cost">—</td>
+                            </tr>
+                            <tr class="inv-detail-row" id="inv-wp-detail" style="display:none">
+                                <td colspan="4">
+                                    <div class="inv-wp-detail-grid">
+                                        <div class="inv-wp-detail-item">
+                                            <span class="inv-wp-detail-label">Heizen</span>
+                                            <span class="inv-wp-detail-kwh" id="inv-wp-heating-kwh">—</span>
+                                            <span class="inv-wp-detail-cost" id="inv-wp-heating-cost">—</span>
+                                        </div>
+                                        <div class="inv-wp-detail-item">
+                                            <span class="inv-wp-detail-label">Warmwasser</span>
+                                            <span class="inv-wp-detail-kwh" id="inv-wp-dhw-kwh">—</span>
+                                            <span class="inv-wp-detail-cost" id="inv-wp-dhw-cost">—</span>
+                                        </div>
+                                        <div class="inv-wp-detail-item">
+                                            <span class="inv-wp-detail-label">Heizstab</span>
+                                            <span class="inv-wp-detail-kwh" id="inv-wp-heater-kwh">—</span>
+                                            <span class="inv-wp-detail-cost" id="inv-wp-heater-cost">—</span>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr class="inv-total-row">
+                                <td colspan="3">Zu zahlen (Kosten + Grundgebuehr − Einspeisung)</td>
+                                <td class="inv-amount" id="inv-net-total">—</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Solar Value Card -->
+                <div class="invoice-section invoice-solar">
+                    <h3 class="invoice-section-title">Solar-Gesamtwert</h3>
+                    <div class="invoice-solar-grid">
+                        <div class="invoice-solar-stat">
+                            <span class="invoice-solar-label">Eigenverbrauch-Ersparnis</span>
+                            <span class="invoice-solar-value" id="inv-solar-savings">0.00 €</span>
+                        </div>
+                        <div class="invoice-solar-stat">
+                            <span class="invoice-solar-label">Einspeisevergütung</span>
+                            <span class="invoice-solar-value" id="inv-solar-feed-in">0.00 €</span>
+                        </div>
+                        <div class="invoice-solar-stat primary">
+                            <span class="invoice-solar-label">Gesamt-Solarwert</span>
+                            <span class="invoice-solar-value" id="inv-solar-total">0.00 €</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dynamic Rate Chart -->
+                <div class="chart-section invoice-chart-section" style="display:none">
+                    <canvas id="rate-chart"></canvas>
+                </div>
+
+                <div class="invoice-footer">
+                    <p>Schätzung auf Basis der konfigurierten Tarife. Tatsächliche Abrechnung kann abweichen.</p>
+                </div>
+            </div>
+        </div>
+        <!-- ═══ Wärmepumpe Tab ═══ -->
+        <div class="tab-content" data-tab="heatpump" style="display:none">
+            <div class="time-selector wp-time-selector">
+                <button class="time-btn active" data-period="today">Heute</button>
+                <button class="time-btn" data-period="yesterday">Gestern</button>
+                <button class="time-btn" data-period="this_week">Diese Woche</button>
+                <button class="time-btn" data-period="last_week">Letzte Woche</button>
+                <button class="time-btn" data-period="this_month">Dieser Monat</button>
+                <button class="time-btn" data-period="last_month">Letzter Monat</button>
+                <button class="time-btn" data-period="this_year">Dieses Jahr</button>
+                <button class="time-btn" data-period="last_year">Letztes Jahr</button>
+                <button class="time-btn custom-range-trigger" data-period="custom">Custom</button>
+            </div>
+            <div class="wp-page">
+                <h2 class="wp-title">Wärmepumpe — <span id="wp-period-label">Heute</span></h2>
+                <div class="wp-stats-grid">
+                    <div class="wp-stat-card">
+                        <span class="wp-stat-label">Elektrisch</span>
+                        <span class="wp-stat-value" id="wp-electric">—</span>
+                        <span class="wp-stat-unit">kWh</span>
+                    </div>
+                    <div class="wp-stat-card">
+                        <span class="wp-stat-label">Thermisch</span>
+                        <span class="wp-stat-value" id="wp-thermal">—</span>
+                        <span class="wp-stat-unit">kWh</span>
+                    </div>
+                    <div class="wp-stat-card wp-cop">
+                        <span class="wp-stat-label">COP</span>
+                        <span class="wp-stat-value" id="wp-cop">—</span>
+                    </div>
+                    <div class="wp-stat-card">
+                        <span class="wp-stat-label">Heizstab</span>
+                        <span class="wp-stat-value" id="wp-heater">—</span>
+                        <span class="wp-stat-unit">kWh</span>
+                    </div>
+                </div>
+                <div class="wp-breakdown">
+                    <h3 class="wp-section-title">Aufschlüsselung</h3>
+                    <div class="wp-breakdown-grid">
+                        <div class="wp-breakdown-item">
+                            <div class="wp-breakdown-label">Heizen</div>
+                            <div class="wp-breakdown-bar-wrap">
+                                <div class="wp-breakdown-bar wp-bar-heating" id="wp-bar-heating"></div>
+                            </div>
+                            <div class="wp-breakdown-value" id="wp-heating-value">—</div>
+                        </div>
+                        <div class="wp-breakdown-item">
+                            <div class="wp-breakdown-label">Warmwasser</div>
+                            <div class="wp-breakdown-bar-wrap">
+                                <div class="wp-breakdown-bar wp-bar-dhw" id="wp-bar-dhw"></div>
+                            </div>
+                            <div class="wp-breakdown-value" id="wp-dhw-value">—</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="wp-chart-section">
+                    <h3 class="wp-section-title">Elektrischer Verbrauch</h3>
+                    <div style="position:relative; height:300px;">
+                        <canvas id="wp-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" data-tab="settings" style="display:none">
+            <div class="settings-page">
+                <h2 class="settings-title">Einstellungen</h2>
+                <p class="settings-subtitle">Sensoren und Parameter konfigurieren. Werte werden in Home Assistant gespeichert und gelten fuer alle Geraete.</p>
+
+                <!-- Leistungs-Sensoren -->
+                <div class="settings-section">
+                    <h3 class="settings-section-title">Leistungs-Sensoren (W)</h3>
+                    <div class="settings-field">
+                        <label>Verbrauch</label>
+                        <div class="autocomplete-wrap">
+                            <input type="text" class="settings-input entity-search" id="set-power-consumption" placeholder="sensor.xxx_consumption_w" autocomplete="off">
+                            <div class="autocomplete-list"></div>
+                        </div>
+                    </div>
+                    <div class="settings-field">
+                        <label>Erzeugung</label>
+                        <div class="autocomplete-wrap">
+                            <input type="text" class="settings-input entity-search" id="set-power-production" placeholder="sensor.xxx_production_w" autocomplete="off">
+                            <div class="autocomplete-list"></div>
+                        </div>
+                    </div>
+                    <div class="settings-field">
+                        <label>Netzbezug</label>
+                        <div class="autocomplete-wrap">
+                            <input type="text" class="settings-input entity-search" id="set-power-grid-import" placeholder="sensor.xxx_imported_w" autocomplete="off">
+                            <div class="autocomplete-list"></div>
+                        </div>
+                    </div>
+                    <div class="settings-field">
+                        <label>Einspeisung</label>
+                        <div class="autocomplete-wrap">
+                            <input type="text" class="settings-input entity-search" id="set-power-grid-export" placeholder="sensor.xxx_exported_w" autocomplete="off">
+                            <div class="autocomplete-list"></div>
+                        </div>
+                    </div>
+                    <div class="settings-field">
+                        <label>Batterie laden</label>
+                        <div class="autocomplete-wrap">
+                            <input type="text" class="settings-input entity-search" id="set-power-battery-charge" placeholder="sensor.xxx_battery_in_w" autocomplete="off">
+                            <div class="autocomplete-list"></div>
+                        </div>
+                    </div>
+                    <div class="settings-field">
+                        <label>Batterie entladen</label>
+                        <div class="autocomplete-wrap">
+                            <input type="text" class="settings-input entity-search" id="set-power-battery-discharge" placeholder="sensor.xxx_battery_out_w" autocomplete="off">
+                            <div class="autocomplete-list"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kumulative Sensoren -->
+                <div class="settings-section">
+                    <h3 class="settings-section-title">Kumulative Energie-Sensoren (kWh)</h3>
+                    <div class="settings-field">
+                        <label>Verbrauch kWh</label>
+                        <div class="autocomplete-wrap">
+                            <input type="text" class="settings-input entity-search" id="set-cum-consumption" placeholder="sensor.xxx_consumption_kwh" autocomplete="off">
+                            <div class="autocomplete-list"></div>
+                        </div>
+                    </div>
+                    <div class="settings-field">
+                        <label>Erzeugung kWh</label>
+                        <div class="autocomplete-wrap">
+                            <input type="text" class="settings-input entity-search" id="set-cum-production" placeholder="sensor.xxx_production_kwh" autocomplete="off">
+                            <div class="autocomplete-list"></div>
+                        </div>
+                    </div>
+                    <div class="settings-field">
+                        <label>Netzbezug kWh</label>
+                        <div class="autocomplete-wrap">
+                            <input type="text" class="settings-input entity-search" id="set-cum-grid-import" placeholder="sensor.xxx_imported_kwh" autocomplete="off">
+                            <div class="autocomplete-list"></div>
+                        </div>
+                    </div>
+                    <div class="settings-field">
+                        <label>Einspeisung kWh</label>
+                        <div class="autocomplete-wrap">
+                            <input type="text" class="settings-input entity-search" id="set-cum-grid-export" placeholder="sensor.xxx_exported_kwh" autocomplete="off">
+                            <div class="autocomplete-list"></div>
+                        </div>
+                    </div>
+                    <div class="settings-field">
+                        <label>Batterie SoC</label>
+                        <div class="autocomplete-wrap">
+                            <input type="text" class="settings-input entity-search" id="set-battery-soc" placeholder="sensor.xxx_state_of_energy" autocomplete="off">
+                            <div class="autocomplete-list"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Referenz & Kosten -->
+                <div class="settings-section">
+                    <h3 class="settings-section-title">Referenz-Limit & Stromkosten</h3>
+                    <div class="settings-field">
+                        <label>Referenz-Limit (kW)</label>
+                        <input type="number" class="settings-input settings-number" id="set-ref-limit" min="0" max="50" step="0.5" value="5">
+                    </div>
+                    <div class="settings-field">
+                        <label>Strompreis</label>
+                        <div class="rate-mode-wrap">
+                            <select class="settings-input settings-select" id="set-rate-mode">
+                                <option value="fixed">Fester Wert</option>
+                                <option value="entity">HA Entitaet</option>
+                            </select>
+                            <input type="number" class="settings-input settings-number" id="set-electricity-rate" min="0" max="1" step="0.01" value="0.30" placeholder="EUR/kWh">
+                            <div class="autocomplete-wrap rate-entity-wrap" style="display:none">
+                                <input type="text" class="settings-input entity-search" id="set-rate-entity" placeholder="sensor.xxx_energy_cost" autocomplete="off">
+                                <div class="autocomplete-list"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="settings-field">
+                        <label>Einspeiseverguetung (EUR/kWh)</label>
+                        <input type="number" class="settings-input settings-number" id="set-feed-in-rate" min="0" max="1" step="0.01" value="0.08">
+                    </div>
+                    <div class="settings-field">
+                        <label>Grundgebuehr (EUR/Monat)</label>
+                        <input type="number" class="settings-input settings-number" id="set-base-fee" min="0" max="100" step="0.01" value="0">
+                    </div>
+                </div>
+
+                <div class="settings-actions">
+                    <button class="settings-save-btn" id="settings-save-btn">Speichern</button>
+                    <span class="settings-status" id="settings-status"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="app.js?v=28"></script>
+</body>
+</html>
