@@ -1,15 +1,11 @@
 #!/bin/bash
-# Deployt alle Dashboard-Dateien auf Home Assistant
-# config.js wird NICHT überschrieben (enthält Token)
+# Pusht Änderungen nach GitHub.
+# HA danach über HACS oder 'Update from GitHub' aktualisieren.
 
-HA_HOST="192.168.50.250"
-HA_PATH="/config/www/energy-dashboard"
-SSH_KEY="$HOME/.ssh/homeassistant_key"
+set -e
+cd "$(dirname "$0")"
 
-FILES="app.js index.html styles.css panel.js"
-
-echo "Deploying to $HA_HOST..."
-for f in $FILES; do
-  scp -i "$SSH_KEY" "$f" "root@$HA_HOST:$HA_PATH/$f" && echo "  ✓ $f"
-done
-echo "Done."
+git add app.js index.html styles.css panel.js config.example.js hacs.json README.md QUICKSTART.md DEBUG.md preview.html
+git diff --cached --stat
+git commit -m "${1:-Update dashboard}" && git push
+echo "Pushed. HA jetzt über HACS updaten oder: ssh HA 'cd /config/www/energy-dashboard && git pull'"
