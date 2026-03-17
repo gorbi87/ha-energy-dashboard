@@ -1595,6 +1595,10 @@ class EnergyDashboard {
               wheel: { enabled: true },
               pinch: { enabled: true },
               mode: 'x',
+              onZoomComplete: () => {
+                const btn = document.getElementById('reset-zoom-rate-btn');
+                if (btn) btn.style.display = '';
+              },
             },
           },
         },
@@ -1841,12 +1845,21 @@ class EnergyDashboard {
     // Settings tab
     this.initSettingsTab();
 
-    // Reset Zoom button
+    // Reset Zoom button (Dashboard chart)
     const resetBtn = document.getElementById('reset-zoom-btn');
     if (resetBtn) {
       resetBtn.addEventListener('click', () => {
         if (this.chart) this.chart.resetZoom();
         resetBtn.style.display = 'none';
+      });
+    }
+
+    // Reset Zoom button (Kosten/Rate chart)
+    const resetRateBtn = document.getElementById('reset-zoom-rate-btn');
+    if (resetRateBtn) {
+      resetRateBtn.addEventListener('click', () => {
+        if (this._rateChart) this._rateChart.resetZoom();
+        resetRateBtn.style.display = 'none';
       });
     }
   }
