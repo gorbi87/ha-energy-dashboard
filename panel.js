@@ -15,7 +15,7 @@ class EnergyPanel extends HTMLElement {
           display: block;
         }
       </style>
-      <iframe src="/local/energy-dashboard/index.html"></iframe>
+      <iframe src="/local/community/ha-energy-dashboard/index.html"></iframe>
     `;
   }
 }
