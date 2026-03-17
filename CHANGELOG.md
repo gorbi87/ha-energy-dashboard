@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.0] - 2026-03-17
+
+### Fixed
+- `config.js` wird nicht mehr aus dem HACS-Ordner geladen (würde bei Updates gelöscht).
+  Konfiguration liegt jetzt dauerhaft in `/config/www/ha-energy-dashboard-config.js`.
+
+---
+
 ## [1.1.0] - 2026-03-17
 
 ### Added

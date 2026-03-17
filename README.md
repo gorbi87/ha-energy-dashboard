@@ -54,13 +54,13 @@ Danach Home Assistant neu starten.
 
 ```bash
 # Via SSH oder File Editor:
-cp /config/www/community/ha-energy-dashboard/config.example.js \
-   /config/www/community/ha-energy-dashboard/config.js
+cp /config/custom_components/ha_energy_dashboard/www/config.example.js \
+   /config/www/ha-energy-dashboard-config.js
 ```
 
-Dann `config.js` mit den eigenen Entity-IDs und einem Long-Lived Access Token befüllen (siehe unten).
+Dann `/config/www/ha-energy-dashboard-config.js` mit den eigenen Entity-IDs und einem Long-Lived Access Token befüllen (siehe unten).
 
-> **Wichtig:** `config.js` wird bei HACS-Updates nicht überschrieben.
+> **Wichtig:** Die Konfiguration liegt in `/config/www/` — dieser Ordner wird von HACS nie angefasst, die Datei bleibt bei jedem Update erhalten.
 
 ---
 
