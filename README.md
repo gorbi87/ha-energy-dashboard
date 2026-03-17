@@ -1,373 +1,110 @@
-# 🔋 Leneda Energy Dashboard - Installation Guide
+# HA Energy Dashboard
 
-## Was du bekommst
+Ein vollständiges Energie-Dashboard für Home Assistant mit Solar, Batterie, Netz und Wärmepumpe.
 
-Eine **1:1 Kopie** des Leneda Energy Dashboards mit:
+![Dashboard](preview.html)
 
-✅ **Exakt gleiches Design** - Dunkles Theme, gleiche Farben, gleiches Layout  
-✅ **Navigation Tabs** - Dashboard, Sensors, Invoice, Settings  
-✅ **Zeitauswahl** - Yesterday, This Week, Last Week, Month, Year, Custom  
-✅ **Statistik-Karten** - Consumption, Production, Exported, Self-Consumed  
-✅ **Animiertes Energy Flow Diagramm** - Mit Haus, Grid, Solar und Live-Daten  
-✅ **Key Metrics Sidebar** - Self-Sufficiency, Peak Power, Gas, etc.  
-✅ **Energy Profile Chart** - Interaktives Balkendiagramm mit ApexCharts  
-✅ **Responsive Design** - Funktioniert auf Desktop, Tablet, Mobile  
+## Features
 
----
-
-## 📦 Dateien im Paket
-
-```
-leneda-app/
-├── index.html      - Hauptseite mit kompletter UI-Struktur
-├── styles.css      - Exakte Kopie des Leneda-Designs
-├── app.js          - JavaScript mit HA-Integration & Animationen
-├── config.js       - Deine Sensor-Konfiguration
-└── README.md       - Diese Anleitung
-```
+- **Energy Flow** – Animiertes Echtzeit-Diagramm mit Haus, Solar, Netz und Batterie
+- **Zeiträume** – Gestern, diese Woche, letzter Monat, dieses Jahr, benutzerdefiniert
+- **Statistik-Karten** – Verbrauch, Erzeugung, Einspeisung, Eigenverbrauch, Autarkiegrad
+- **Wärmepumpe-Tab** – COP, thermische Energie, Heizen/Warmwasser-Aufschlüsselung
+- **Interaktive Charts** – Balken- und Liniendiagramme mit Zoom
+- **Kosten** – Stromkosten mit dynamischem oder festem Tarif
 
 ---
 
-## 🚀 Installation (3 Methoden)
+## Installation via HACS
 
-### **Methode 1: Als Home Assistant Panel** ⭐ EMPFOHLEN
+### Voraussetzungen
 
-Das Dashboard läuft als eigenständiges Panel in Home Assistant.
+- [HACS](https://hacs.xyz/) installiert
+- Home Assistant 2023.1 oder neuer
 
-#### Schritt 1: Dateien hochladen
+### Schritt 1: Repository hinzufügen
 
-**Via File Editor:**
-1. Öffne **File Editor** in Home Assistant
-2. Erstelle Ordner: `/config/www/leneda-dashboard/`
-3. Lade alle Dateien in diesen Ordner hoch:
-   - `index.html`
-   - `styles.css`
-   - `app.js`
-   - `config.js`
+1. HACS öffnen → **Integrations** (oder **Frontend**) → drei Punkte oben rechts → **Custom Repositories**
+2. URL eintragen: `https://github.com/gorbi87/ha-energy-dashboard`
+3. Kategorie: **Plugin**
+4. **Add** klicken
 
-**Via SSH:**
-```bash
-mkdir -p /config/www/leneda-dashboard
-cd /config/www/leneda-dashboard
-# Kopiere alle Dateien hierher
-```
+### Schritt 2: Dashboard installieren
 
-#### Schritt 2: Panel registrieren
+1. In HACS nach **HA Energy Dashboard** suchen
+2. **Download** klicken
+3. HACS installiert die Dateien nach `/config/www/community/ha-energy-dashboard/`
 
-Füge in deine `/config/configuration.yaml` ein:
+### Schritt 3: Panel registrieren
+
+In `/config/configuration.yaml` eintragen:
 
 ```yaml
 panel_iframe:
-  leneda_dashboard:
-    title: "Leneda Energy"
-    icon: mdi:lightning-bolt
-    url: /local/leneda-dashboard/index.html
+  energy_dashboard:
+    title: "Energie"
+    icon: mdi:solar-power-variant
+    url: /local/community/ha-energy-dashboard/index.html
     require_admin: false
 ```
 
-#### Schritt 3: Home Assistant neustarten
+Danach Home Assistant neu starten.
 
-**Developer Tools** → **YAML** → **Restart Home Assistant**
+### Schritt 4: Konfiguration anlegen
 
-✅ **Fertig!** Das Dashboard erscheint in der Sidebar!
-
----
-
-### **Methode 2: Als Lovelace iFrame Card**
-
-Zeige das Dashboard in einem Dashboard an.
-
-1. Dateien wie oben hochladen nach `/config/www/leneda-dashboard/`
-2. Neue Karte in Lovelace hinzufügen:
-
-```yaml
-type: iframe
-url: /local/leneda-dashboard/index.html
-aspect_ratio: 16:9
+```bash
+# Via SSH oder File Editor:
+cp /config/www/community/ha-energy-dashboard/config.example.js \
+   /config/www/community/ha-energy-dashboard/config.js
 ```
 
----
+Dann `config.js` mit den eigenen Entity-IDs und einem Long-Lived Access Token befüllen (siehe unten).
 
-### **Methode 3: Standalone (außerhalb von HA)**
-
-Nutze das Dashboard auf einem separaten Webserver.
-
-1. Kopiere alle Dateien auf deinen Webserver
-2. Passe in `config.js` die HA-URL an:
-   ```javascript
-   homeAssistant: {
-       url: 'http://homeassistant.local:8123'
-   }
-   ```
-3. Öffne `index.html` im Browser
+> **Wichtig:** `config.js` wird bei HACS-Updates nicht überschrieben.
 
 ---
 
-## ⚙️ Konfiguration
+## Konfiguration
 
-### Schritt 1: Sensor-Zuordnung
+### Long-Lived Access Token
 
-Öffne `config.js` und trage deine **exakten Entity-IDs** ein:
+1. HA Profil → **Sicherheit** → **Langlebige Zugriffstoken** → **Token erstellen**
+2. Token in `config.js` bei `accessToken` eintragen
+
+### Entity-IDs
+
+`config.js` enthält alle nötigen Sensor-Zuordnungen. Die wichtigsten:
 
 ```javascript
 entities: {
-    // PFLICHT - Diese Sensoren werden BENÖTIGT:
-    consumption: 'sensor.solar_house_consumption_daily',
-    production: 'sensor.solar_panel_to_house_daily',
-    exported: 'sensor.solar_exported_power_daily',
-    grid_import: 'sensor.solar_imported_power_daily',
-    
-    // OPTIONAL - Falls vorhanden:
-    battery_charge: 'sensor.solar_battery_in_daily',
-    battery_discharge: 'sensor.solar_battery_out_daily',
-    battery_level: 'sensor.battery_level',      // in %
-    peak_power: 'sensor.peak_power',            // in kW
-    gas_energy: 'sensor.gas_energy',            // in kWh
-    gas_volume: 'sensor.gas_volume',            // in m³
+  power: {
+    consumption:       'sensor.DEIN_VERBRAUCH_W',        // Watt
+    production:        'sensor.DEINE_PV_LEISTUNG_W',     // Watt
+    grid_import:       'sensor.DEIN_NETZBEZUG_W',        // Watt
+    grid_export:       'sensor.DEINE_EINSPEISUNG_W',     // Watt
+    battery_charge:    'sensor.DEINE_BATTERIE_LADEN_W',  // Watt (optional)
+    battery_discharge: 'sensor.DEINE_BATTERIE_ENTLADEN_W', // Watt (optional)
+  },
+  cumulative: {
+    consumption: 'sensor.VERBRAUCH_GESAMT_KWH',   // kWh, state_class: total
+    production:  'sensor.PV_GESAMT_KWH',
+    grid_import: 'sensor.NETZBEZUG_GESAMT_KWH',
+    grid_export: 'sensor.EINSPEISUNG_GESAMT_KWH',
+  },
+  // ... weitere Sensoren in config.example.js dokumentiert
 }
 ```
 
-### Schritt 2: Entity-IDs finden
-
-**So findest du deine exakten Sensor-Namen:**
-
-1. **Entwicklerwerkzeuge** → **Zustände**
-2. Suche nach: `solar`, `energy`, `power`, `consumption`
-3. Kopiere die **exakte Entity-ID** (z.B. `sensor.solar_house_consumption_daily`)
-
-**Häufige Sensor-Namen:**
-
-| Typ | Beispiel-Entity-IDs |
-|-----|---------------------|
-| Verbrauch | `sensor.home_consumption`, `sensor.house_energy` |
-| PV-Erzeugung | `sensor.solar_production`, `sensor.pv_power` |
-| Netzbezug | `sensor.grid_import`, `sensor.imported_energy` |
-| Einspeisung | `sensor.grid_export`, `sensor.exported_energy` |
-| Batterie | `sensor.battery_charge`, `sensor.battery_soc` |
-
-### Schritt 3: Zeiträume anpassen
-
-Falls deine Sensoren andere Suffixe haben:
-
-```javascript
-periods: {
-    yesterday: {
-        suffix: '_daily'     // Ändere zu '_today' oder '_day' wenn nötig
-    },
-    this_month: {
-        suffix: '_monthly'   // Oder '_month', '_current_month', etc.
-    }
-}
-```
+Die vollständige Konfiguration mit allen Optionen ist in `config.example.js` dokumentiert.
 
 ---
 
-## 🎨 Anpassungen
+## Updates
 
-### Farben ändern
-
-In `styles.css`, ändere die CSS-Variablen:
-
-```css
-:root {
-    --accent-blue: #4a9eff;      /* Hauptfarbe */
-    --accent-red: #ef4444;       /* Consumption */
-    --accent-green: #10b981;     /* Production */
-    --accent-purple: #8b5cf6;    /* Self-Consumed */
-}
-```
-
-### Energy Flow Animation
-
-In `app.js`, passe die Animation an:
-
-```javascript
-ui: {
-    animationSpeed: 1.0,    // Schneller: 2.0, Langsamer: 0.5
-}
-```
-
-### Chart-Höhe
-
-In `config.js`:
-
-```javascript
-ui: {
-    chartHeight: 350,  // Höhe in Pixel
-}
-```
+Updates werden in HACS unter **Updates verfügbar** angezeigt und können dort direkt installiert werden. Die eigene `config.js` bleibt dabei erhalten.
 
 ---
 
-## 🔧 Fehlerbehebung
+## Lizenz
 
-### Dashboard lädt nicht
-
-**Problem:** Leere Seite oder 404 Error
-
-**Lösung:**
-1. Prüfe Dateipfad: `/config/www/leneda-dashboard/index.html`
-2. Prüfe `configuration.yaml` Syntax:
-   ```yaml
-   panel_iframe:
-     leneda_dashboard:
-       url: /local/leneda-dashboard/index.html  # ← WICHTIG: /local/ nicht /www/
-   ```
-3. Home Assistant neustarten
-
-### Keine Daten sichtbar
-
-**Problem:** Dashboard zeigt "Loading" oder 0,00 Werte
-
-**Lösung:**
-1. **Prüfe Entity-IDs** in `config.js`:
-   - Öffne **Entwicklerwerkzeuge** → **Zustände**
-   - Suche deine Sensoren
-   - Kopiere **exakte** Entity-ID (inkl. Suffix!)
-
-2. **Browser-Konsole prüfen** (F12 → Console):
-   ```
-   Failed to fetch entity: sensor.xyz
-   ```
-   → Entity-ID ist falsch
-
-3. **Prüfe Sensor-Werte**:
-   - Haben die Sensoren gültige Zahlen?
-   - Sind sie `available`? (nicht `unknown` oder `unavailable`)
-
-### Chart zeigt keine Daten
-
-**Problem:** Energy Profile Chart ist leer
-
-**Lösung:**
-1. Prüfe ob **ApexCharts** geladen wurde (F12 → Network)
-2. Chart nutzt aktuell **Demo-Daten** 
-3. Für echte Daten: Implementiere `getHistoricalData()` in `app.js`
-
-### Energy Flow Animation läuft nicht
-
-**Problem:** Statisches Bild, keine Animation
-
-**Lösung:**
-1. **JavaScript-Fehler?** F12 → Console
-2. **Canvas nicht supported?** Sehr alte Browser
-3. **Performance-Problem?** Reduziere `animationSpeed` in config.js
-
-### Panel erscheint nicht in Sidebar
-
-**Problem:** Nach Neustart kein neues Panel sichtbar
-
-**Lösung:**
-1. **YAML-Syntax prüfen**:
-   ```bash
-   # Developer Tools → YAML → Check Configuration
-   ```
-2. **Logs prüfen**:
-   ```
-   Settings → System → Logs
-   # Suche nach "panel_iframe" Fehlern
-   ```
-3. **Browser-Cache leeren**: Strg + Shift + R
-
----
-
-## 📊 Berechnete Werte
-
-Das Dashboard berechnet automatisch:
-
-### Self-Consumed (Eigenverbrauch)
-```
-= Production - Exported
-= Erzeugung - Einspeisung
-```
-
-### Self-Sufficiency (Autarkiegrad)
-```
-= ((Consumption - Grid Import) / Consumption) × 100%
-= ((Verbrauch - Netzbezug) / Verbrauch) × 100%
-```
-
-**Beispiel:**
-- Verbrauch: 12,34 kWh
-- Netzbezug: 6,89 kWh
-- Autarkiegrad: ((12,34 - 6,89) / 12,34) × 100% = **44,2%**
-
----
-
-## 🔄 Updates & Wartung
-
-### Dashboard aktualisieren
-
-1. Lade neue Versionen der Dateien herunter
-2. Ersetze die alten Dateien in `/config/www/leneda-dashboard/`
-3. **Wichtig:** Browser-Cache leeren! (Strg + Shift + R)
-
-### Konfiguration sichern
-
-Sichere `config.js` bevor du Updates machst:
-```bash
-cp /config/www/leneda-dashboard/config.js /config/backups/leneda-config.js
-```
-
----
-
-## 🎯 Roadmap / Geplante Features
-
-- [ ] **Live-Daten aus HA** (aktuell: Demo-Daten in Chart)
-- [ ] **Historische Charts** (Woche, Monat, Jahr)
-- [ ] **Sensors Tab** (Detailansicht aller Sensoren)
-- [ ] **Invoice Tab** (Kosten-Kalkulation)
-- [ ] **Settings Tab** (UI-Einstellungen im Dashboard)
-- [ ] **Custom Date Range** (Eigene Zeiträume wählen)
-- [ ] **Export** (PDF/CSV Export der Daten)
-- [ ] **Mehrsprachigkeit** (DE/EN/FR)
-
----
-
-## ❓ FAQ
-
-**F: Funktioniert das mit SolarEdge / Fronius / SMA?**  
-A: Ja! Solange du Sensoren für Consumption, Production, Export hast.
-
-**F: Brauche ich eine Batterie?**  
-A: Nein, Battery-Sensoren sind optional. Dashboard funktioniert auch ohne.
-
-**F: Kann ich monatliche statt tägliche Werte anzeigen?**  
-A: Ja! Ändere in `config.js`:
-```javascript
-consumption: 'sensor.solar_house_consumption_monthly'
-```
-
-**F: Warum zeigt der Chart Demo-Daten?**  
-A: Live-Daten aus HA History kommen in v2. Aktuell: Zufallsdaten zur Demo.
-
-**F: Kann ich das Design anpassen?**  
-A: Ja! Alle Farben in `styles.css` unter `:root` CSS-Variablen.
-
-**F: Funktioniert das auf dem Handy?**  
-A: Ja, vollständig responsive! Optimiert für Mobile, Tablet und Desktop.
-
----
-
-## 🐛 Bug Reports & Feature Requests
-
-Probleme gefunden? Ideen für neue Features?
-
-1. **GitHub Issues** erstellen (falls Repository vorhanden)
-2. **Screenshots** beifügen
-3. **Browser-Console** Logs kopieren (F12 → Console)
-4. **Entity-IDs** anonymisiert teilen
-
----
-
-## 📜 Lizenz
-
-Dieses Projekt ist **Open Source** und kostenlos nutzbar.
-
-Basiert auf dem Design von [Leneda.lu](https://www.leneda.lu/) - Energy Monitoring Platform.
-
----
-
-**Viel Erfolg mit deinem Leneda Dashboard! ⚡**
-
-Bei Fragen einfach melden! 🚀
+MIT License
