@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.2.1] - 2026-08-13
+
+### Fixed
+- Panel-Inhalt wurde nach einem HA-Core-Update oben abgeschnitten (iframe kollabierte auf Mini-Höhe,
+  da `height: 100%` nicht mehr zuverlässig durch den HA-Panel-Container vererbt wurde).
+  `panel.js` misst die Höhe jetzt per JS (`getBoundingClientRect`/`resize`) statt sich auf CSS-Vererbung zu verlassen.
+
+---
+
 ## [1.2.0] - 2026-03-17
 
 ### Fixed

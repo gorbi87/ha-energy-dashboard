@@ -6,17 +6,26 @@ class EnergyPanel extends HTMLElement {
         :host {
           display: block;
           width: 100%;
-          height: 100%;
         }
         iframe {
           border: none;
           width: 100%;
-          height: 100%;
           display: block;
         }
       </style>
       <iframe src="/ha-energy-dashboard/index.html"></iframe>
     `;
+    this._iframe = this.shadowRoot.querySelector('iframe');
+    this._resize = () => {
+      const top = this.getBoundingClientRect().top;
+      this._iframe.style.height = `${window.innerHeight - top}px`;
+    };
+    this._resize();
+    window.addEventListener('resize', this._resize);
+  }
+
+  disconnectedCallback() {
+    window.removeEventListener('resize', this._resize);
   }
 }
 
