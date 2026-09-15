@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.4.2] - 2026-09-15
+
+### Fixed
+- **Bug:** `loadSettings()` hat `rateEntity` (Strompreis-Sensor fuer dynamische Tarife) bei jedem
+  Laden bedingungslos ueberschrieben, auch wenn im Storage noch nichts gespeichert war — dadurch
+  fiel die Anzeige nach dem Umbau auf v1.4.0 auf "Fester Wert" zurueck, obwohl ein Sensor konfiguriert
+  war. Wird jetzt wie alle anderen Felder nur ueberschrieben, wenn der Storage-Key tatsaechlich gesetzt ist.
+- `setVal()` in `populateSettingsForm()` liess Zahlenfelder mit Wert `0` leer (truthy-Check statt
+  Praesenz-Check) — betraf z.B. eine Grundgebuehr von 0 EUR.
+- Waermepumpe-Toggle wurde durch eine zu allgemeine CSS-Regel (`.settings-field label`, die auch den
+  Toggle-Wrapper traf, da er zufaellig ebenfalls ein `<label>` ist) auf 160px Breite gezogen statt 42px.
+
+### Added
+- Kurze Beschreibung unter jedem Feld/jeder Sensor-Gruppe in den Einstellungen.
+
+### Data-Loss-Hinweis
+- Beim Aufraeumen der 38 alten Helper in v1.4.0 wurden `Grundgebuehr` und `Strompreis-Entitaet`
+  (die kein `config.js`-Aequivalent haben) mitgeloescht, ohne vorher migriert zu werden. Werte
+  liessen sich ueber die HA-Historie der geloeschten Entities rekonstruieren, muessen aber einmalig
+  ueber die Einstellungen-Seite neu eingetragen werden.
+
+---
+
 ## [1.4.1] - 2026-09-15
 
 ### Added

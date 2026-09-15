@@ -2039,8 +2039,12 @@ class EnergyDashboard {
       // Wärmepumpe an/aus (default: an, außer explizit ausgeschaltet)
       this.config.heatpumpEnabled = s.heatpumpEnabled !== false;
 
-      // Rate entity mode: if an entity is configured, read rate from it
-      this.config.rateEntity = s.rateEntity || '';
+      // Rate entity mode: only touch config.js's rateEntity if Settings was
+      // actually saved at least once (storage key present) — otherwise an
+      // empty/never-saved storage would silently wipe a config.js default.
+      if (Object.prototype.hasOwnProperty.call(s, 'rateEntity')) {
+        this.config.rateEntity = s.rateEntity || '';
+      }
       if (this.config.rateEntity) {
         const entityRate = await this.getState(this.config.rateEntity);
         if (entityRate > 0) this.config.electricityRate = entityRate;
@@ -2059,7 +2063,7 @@ class EnergyDashboard {
 
     const setVal = (id, val) => {
       const el = document.getElementById(id);
-      if (el && val) el.value = val;
+      if (el && val !== undefined && val !== null && val !== '') el.value = val;
     };
 
     // Power sensors

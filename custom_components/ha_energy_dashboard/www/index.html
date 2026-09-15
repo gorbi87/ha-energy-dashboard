@@ -548,42 +548,42 @@
                 <div class="settings-section">
                     <h3 class="settings-section-title">Leistungs-Sensoren (W)</h3>
                     <div class="settings-field">
-                        <label>Verbrauch</label>
+                        <label>Verbrauch<span class="settings-hint">Live-Hausverbrauch in Watt</span></label>
                         <div class="autocomplete-wrap">
                             <input type="text" class="settings-input entity-search" id="set-power-consumption" placeholder="sensor.xxx_consumption_w" autocomplete="off">
                             <div class="autocomplete-list"></div>
                         </div>
                     </div>
                     <div class="settings-field">
-                        <label>Erzeugung</label>
+                        <label>Erzeugung<span class="settings-hint">Live-PV-Erzeugung in Watt</span></label>
                         <div class="autocomplete-wrap">
                             <input type="text" class="settings-input entity-search" id="set-power-production" placeholder="sensor.xxx_production_w" autocomplete="off">
                             <div class="autocomplete-list"></div>
                         </div>
                     </div>
                     <div class="settings-field">
-                        <label>Netzbezug</label>
+                        <label>Netzbezug<span class="settings-hint">Aktuell aus dem Netz bezogene Leistung in Watt</span></label>
                         <div class="autocomplete-wrap">
                             <input type="text" class="settings-input entity-search" id="set-power-grid-import" placeholder="sensor.xxx_imported_w" autocomplete="off">
                             <div class="autocomplete-list"></div>
                         </div>
                     </div>
                     <div class="settings-field">
-                        <label>Einspeisung</label>
+                        <label>Einspeisung<span class="settings-hint">Aktuell ins Netz eingespeiste Leistung in Watt</span></label>
                         <div class="autocomplete-wrap">
                             <input type="text" class="settings-input entity-search" id="set-power-grid-export" placeholder="sensor.xxx_exported_w" autocomplete="off">
                             <div class="autocomplete-list"></div>
                         </div>
                     </div>
                     <div class="settings-field">
-                        <label>Batterie laden</label>
+                        <label>Batterie laden<span class="settings-hint">Aktuelle Ladeleistung der Batterie in Watt</span></label>
                         <div class="autocomplete-wrap">
                             <input type="text" class="settings-input entity-search" id="set-power-battery-charge" placeholder="sensor.xxx_battery_in_w" autocomplete="off">
                             <div class="autocomplete-list"></div>
                         </div>
                     </div>
                     <div class="settings-field">
-                        <label>Batterie entladen</label>
+                        <label>Batterie entladen<span class="settings-hint">Aktuelle Entladeleistung der Batterie in Watt</span></label>
                         <div class="autocomplete-wrap">
                             <input type="text" class="settings-input entity-search" id="set-power-battery-discharge" placeholder="sensor.xxx_battery_out_w" autocomplete="off">
                             <div class="autocomplete-list"></div>
@@ -595,35 +595,35 @@
                 <div class="settings-section">
                     <h3 class="settings-section-title">Kumulative Energie-Sensoren (kWh)</h3>
                     <div class="settings-field">
-                        <label>Verbrauch kWh</label>
+                        <label>Verbrauch kWh<span class="settings-hint">Zaehlerstand Gesamtverbrauch (steigend, state_class total)</span></label>
                         <div class="autocomplete-wrap">
                             <input type="text" class="settings-input entity-search" id="set-cum-consumption" placeholder="sensor.xxx_consumption_kwh" autocomplete="off">
                             <div class="autocomplete-list"></div>
                         </div>
                     </div>
                     <div class="settings-field">
-                        <label>Erzeugung kWh</label>
+                        <label>Erzeugung kWh<span class="settings-hint">Zaehlerstand PV-Gesamterzeugung</span></label>
                         <div class="autocomplete-wrap">
                             <input type="text" class="settings-input entity-search" id="set-cum-production" placeholder="sensor.xxx_production_kwh" autocomplete="off">
                             <div class="autocomplete-list"></div>
                         </div>
                     </div>
                     <div class="settings-field">
-                        <label>Netzbezug kWh</label>
+                        <label>Netzbezug kWh<span class="settings-hint">Zaehlerstand Gesamt-Netzbezug</span></label>
                         <div class="autocomplete-wrap">
                             <input type="text" class="settings-input entity-search" id="set-cum-grid-import" placeholder="sensor.xxx_imported_kwh" autocomplete="off">
                             <div class="autocomplete-list"></div>
                         </div>
                     </div>
                     <div class="settings-field">
-                        <label>Einspeisung kWh</label>
+                        <label>Einspeisung kWh<span class="settings-hint">Zaehlerstand Gesamt-Einspeisung</span></label>
                         <div class="autocomplete-wrap">
                             <input type="text" class="settings-input entity-search" id="set-cum-grid-export" placeholder="sensor.xxx_exported_kwh" autocomplete="off">
                             <div class="autocomplete-list"></div>
                         </div>
                     </div>
                     <div class="settings-field">
-                        <label>Batterie SoC</label>
+                        <label>Batterie SoC<span class="settings-hint">Ladezustand der Batterie in Prozent</span></label>
                         <div class="autocomplete-wrap">
                             <input type="text" class="settings-input entity-search" id="set-battery-soc" placeholder="sensor.xxx_state_of_energy" autocomplete="off">
                             <div class="autocomplete-list"></div>
@@ -637,7 +637,7 @@
                     <p class="settings-subtitle">Optional. Werden fuer die Statistik-Karten der aktuellen Zeitraeume (Heute, Diese Woche, ...) genutzt. Ohne Eintrag wird aus den kumulativen Sensoren berechnet.</p>
 
                     <div class="settings-subgroup">
-                        <div class="settings-subgroup-title">Verbrauch</div>
+                        <div class="settings-subgroup-title">Verbrauch<span class="settings-hint">Optionale Summensensoren fuer den Verbrauch</span></div>
                         <div class="settings-period-row">
                             <div class="autocomplete-wrap"><label class="settings-period-label">Tag</label><input type="text" class="settings-input entity-search" id="set-energy-consumption-daily" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
                             <div class="autocomplete-wrap"><label class="settings-period-label">Woche</label><input type="text" class="settings-input entity-search" id="set-energy-consumption-weekly" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
@@ -647,7 +647,7 @@
                     </div>
 
                     <div class="settings-subgroup">
-                        <div class="settings-subgroup-title">Erzeugung</div>
+                        <div class="settings-subgroup-title">Erzeugung<span class="settings-hint">Optionale Summensensoren fuer die Erzeugung</span></div>
                         <div class="settings-period-row">
                             <div class="autocomplete-wrap"><label class="settings-period-label">Tag</label><input type="text" class="settings-input entity-search" id="set-energy-production-daily" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
                             <div class="autocomplete-wrap"><label class="settings-period-label">Woche</label><input type="text" class="settings-input entity-search" id="set-energy-production-weekly" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
@@ -657,7 +657,7 @@
                     </div>
 
                     <div class="settings-subgroup">
-                        <div class="settings-subgroup-title">Netzbezug</div>
+                        <div class="settings-subgroup-title">Netzbezug<span class="settings-hint">Optionale Summensensoren fuer den Netzbezug</span></div>
                         <div class="settings-period-row">
                             <div class="autocomplete-wrap"><label class="settings-period-label">Tag</label><input type="text" class="settings-input entity-search" id="set-energy-grid-import-daily" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
                             <div class="autocomplete-wrap"><label class="settings-period-label">Woche</label><input type="text" class="settings-input entity-search" id="set-energy-grid-import-weekly" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
@@ -667,7 +667,7 @@
                     </div>
 
                     <div class="settings-subgroup">
-                        <div class="settings-subgroup-title">Einspeisung</div>
+                        <div class="settings-subgroup-title">Einspeisung<span class="settings-hint">Optionale Summensensoren fuer die Einspeisung</span></div>
                         <div class="settings-period-row">
                             <div class="autocomplete-wrap"><label class="settings-period-label">Tag</label><input type="text" class="settings-input entity-search" id="set-energy-grid-export-daily" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
                             <div class="autocomplete-wrap"><label class="settings-period-label">Woche</label><input type="text" class="settings-input entity-search" id="set-energy-grid-export-weekly" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
@@ -677,7 +677,7 @@
                     </div>
 
                     <div class="settings-subgroup">
-                        <div class="settings-subgroup-title">Batterie laden</div>
+                        <div class="settings-subgroup-title">Batterie laden<span class="settings-hint">Optionale Summensensoren fuer die Batterieladung</span></div>
                         <div class="settings-period-row">
                             <div class="autocomplete-wrap"><label class="settings-period-label">Tag</label><input type="text" class="settings-input entity-search" id="set-energy-battery-charge-daily" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
                             <div class="autocomplete-wrap"><label class="settings-period-label">Woche</label><input type="text" class="settings-input entity-search" id="set-energy-battery-charge-weekly" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
@@ -687,7 +687,7 @@
                     </div>
 
                     <div class="settings-subgroup">
-                        <div class="settings-subgroup-title">Batterie entladen</div>
+                        <div class="settings-subgroup-title">Batterie entladen<span class="settings-hint">Optionale Summensensoren fuer die Batterieentladung</span></div>
                         <div class="settings-period-row">
                             <div class="autocomplete-wrap"><label class="settings-period-label">Tag</label><input type="text" class="settings-input entity-search" id="set-energy-battery-discharge-daily" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
                             <div class="autocomplete-wrap"><label class="settings-period-label">Woche</label><input type="text" class="settings-input entity-search" id="set-energy-battery-discharge-weekly" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
@@ -702,42 +702,42 @@
                     <h3 class="settings-section-title">Kosten-Sensoren</h3>
                     <p class="settings-subtitle">Optional. Absolute Kostensensoren (falls vorhanden) statt Berechnung aus Strompreis × Verbrauch.</p>
                     <div class="settings-field">
-                        <label>Kosten Tag</label>
+                        <label>Kosten Tag<span class="settings-hint">Absolute Stromkosten heute statt Berechnung aus Strompreis x Verbrauch</span></label>
                         <div class="autocomplete-wrap">
                             <input type="text" class="settings-input entity-search" id="set-cost-daily" placeholder="sensor.xxx_cost_daily" autocomplete="off">
                             <div class="autocomplete-list"></div>
                         </div>
                     </div>
                     <div class="settings-field">
-                        <label>Kosten Woche</label>
+                        <label>Kosten Woche<span class="settings-hint">Absolute Stromkosten diese Woche</span></label>
                         <div class="autocomplete-wrap">
                             <input type="text" class="settings-input entity-search" id="set-cost-weekly" placeholder="sensor.xxx_cost_weekly" autocomplete="off">
                             <div class="autocomplete-list"></div>
                         </div>
                     </div>
                     <div class="settings-field">
-                        <label>Kosten Monat</label>
+                        <label>Kosten Monat<span class="settings-hint">Absolute Stromkosten diesen Monat</span></label>
                         <div class="autocomplete-wrap">
                             <input type="text" class="settings-input entity-search" id="set-cost-monthly" placeholder="sensor.xxx_cost_monthly" autocomplete="off">
                             <div class="autocomplete-list"></div>
                         </div>
                     </div>
                     <div class="settings-field">
-                        <label>Kosten Jahr</label>
+                        <label>Kosten Jahr<span class="settings-hint">Absolute Stromkosten dieses Jahr</span></label>
                         <div class="autocomplete-wrap">
                             <input type="text" class="settings-input entity-search" id="set-cost-yearly" placeholder="sensor.xxx_cost_yearly" autocomplete="off">
                             <div class="autocomplete-list"></div>
                         </div>
                     </div>
                     <div class="settings-field">
-                        <label>Strompreis-Sensor</label>
+                        <label>Strompreis-Sensor<span class="settings-hint">Aktueller Preis fuer die Statistik-Karten, unabhaengig vom Tarif unten</span></label>
                         <div class="autocomplete-wrap">
                             <input type="text" class="settings-input entity-search" id="set-cost-rate" placeholder="sensor.xxx_cost_rate" autocomplete="off">
                             <div class="autocomplete-list"></div>
                         </div>
                     </div>
                     <div class="settings-field">
-                        <label>Verguetungs-Sensor</label>
+                        <label>Verguetungs-Sensor<span class="settings-hint">Aktuelle Einspeiseverguetung fuer die Statistik-Karten</span></label>
                         <div class="autocomplete-wrap">
                             <input type="text" class="settings-input entity-search" id="set-cost-compensation" placeholder="sensor.xxx_compensation_rate" autocomplete="off">
                             <div class="autocomplete-list"></div>
@@ -749,11 +749,11 @@
                 <div class="settings-section">
                     <h3 class="settings-section-title">Referenz-Limit & Stromkosten</h3>
                     <div class="settings-field">
-                        <label>Referenz-Limit (kW)</label>
+                        <label>Referenz-Limit (kW)<span class="settings-hint">Netzbezug, ab dem eine Warnung erscheint</span></label>
                         <input type="number" class="settings-input settings-number" id="set-ref-limit" min="0" max="50" step="0.5" value="5">
                     </div>
                     <div class="settings-field">
-                        <label>Strompreis</label>
+                        <label>Strompreis<span class="settings-hint">Fester Preis oder HA-Sensor fuer dynamische Tarife (z.B. Octopus, Tibber)</span></label>
                         <div class="rate-mode-wrap">
                             <select class="settings-input settings-select" id="set-rate-mode">
                                 <option value="fixed">Fester Wert</option>
@@ -767,11 +767,11 @@
                         </div>
                     </div>
                     <div class="settings-field">
-                        <label>Einspeiseverguetung (EUR/kWh)</label>
+                        <label>Einspeiseverguetung (EUR/kWh)<span class="settings-hint">Verguetung pro eingespeister kWh</span></label>
                         <input type="number" class="settings-input settings-number" id="set-feed-in-rate" min="0" max="1" step="0.01" value="0.08">
                     </div>
                     <div class="settings-field">
-                        <label>Grundgebuehr (EUR/Monat)</label>
+                        <label>Grundgebuehr (EUR/Monat)<span class="settings-hint">Monatliche Grundgebuehr des Stromvertrags</span></label>
                         <input type="number" class="settings-input settings-number" id="set-base-fee" min="0" max="100" step="0.01" value="0">
                     </div>
                 </div>
@@ -780,7 +780,7 @@
                 <div class="settings-section">
                     <h3 class="settings-section-title">Anzeige</h3>
                     <div class="settings-field">
-                        <label>Aktualisierung (Sekunden)</label>
+                        <label>Aktualisierung (Sekunden)<span class="settings-hint">Wie oft die Live-Werte automatisch neu geladen werden</span></label>
                         <input type="number" class="settings-input settings-number" id="set-refresh-interval" min="5" max="300" step="5" value="30">
                     </div>
                 </div>
@@ -789,7 +789,7 @@
                 <div class="settings-section">
                     <h3 class="settings-section-title">Wärmepumpe</h3>
                     <div class="settings-field">
-                        <label>Wärmepumpe-Tab anzeigen</label>
+                        <label>Wärmepumpe-Tab anzeigen<span class="settings-hint">Blendet Tab, Statistik-Karte und Flow-Knoten komplett aus</span></label>
                         <label class="settings-toggle">
                             <input type="checkbox" id="set-heatpump-enabled" checked>
                             <span class="settings-toggle-slider"></span>
