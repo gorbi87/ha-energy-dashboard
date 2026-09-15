@@ -1,211 +1,74 @@
-# ⚡ QUICKSTART - Leneda Dashboard in 5 Minuten
+# ⚡ Quickstart
 
-## 📋 Was du brauchst
+## Was du brauchst
 
-- ✅ Home Assistant installiert
-- ✅ File Editor Add-on (oder SSH-Zugriff)
-- ✅ Energie-Sensoren (Solar/Verbrauch/Grid)
-
----
-
-## 🚀 Installation in 3 Schritten
-
-### **SCHRITT 1: Dateien hochladen** (2 Minuten)
-
-**Via File Editor:**
-
-1. Öffne **File Editor** in Home Assistant
-2. Klicke auf 📁 **Ordner-Symbol** → **Neuer Ordner**
-3. Erstelle: `www/leneda-dashboard`
-4. Lade **alle 5 Dateien** in diesen Ordner hoch:
-   - `index.html`
-   - `styles.css`
-   - `app.js`
-   - `config.js`
-   - `README.md`
-
-**Ergebnis:** `/config/www/leneda-dashboard/index.html` sollte existieren
+- [HACS](https://hacs.xyz/) installiert
+- Deine Energie-Sensoren (Solar/Verbrauch/Netz) — Entity-IDs findest du unter
+  **Entwicklerwerkzeuge → Zustände**, Suche nach `solar`, `energy`, `consumption`
 
 ---
 
-### **SCHRITT 2: Panel registrieren** (1 Minute)
+## Installation (2 Schritte)
 
-1. Öffne `/config/configuration.yaml`
-2. Füge am Ende hinzu:
+### 1. Über HACS installieren
+
+1. HACS → drei Punkte oben rechts → **Eigene Repositories**
+2. URL: `https://github.com/gorbi87/ha-energy-dashboard`, Kategorie: **Integration**
+3. In HACS nach **HA Energy Dashboard** suchen → **Download**
+
+### 2. Panel registrieren
+
+In `configuration.yaml`:
 
 ```yaml
-panel_iframe:
-  leneda_dashboard:
-    title: "Leneda Energy"
-    icon: mdi:lightning-bolt
-    url: /local/leneda-dashboard/index.html
+ha_energy_dashboard:
+
+panel_custom:
+  - name: energy-panel
+    sidebar_title: Energie
+    sidebar_icon: mdi:solar-power-variant
+    module_url: /ha-energy-dashboard/panel.js
+    embed_iframe: false
     require_admin: false
 ```
 
-3. **Speichern!** 💾
+**Home Assistant neu starten.** In der Sidebar erscheint "Energie".
 
 ---
 
-### **SCHRITT 3: Home Assistant neustarten** (1 Minute)
+## Sensoren eintragen (kein Datei-Zugriff nötig)
 
-1. **Developer Tools** → **YAML** → **Restart Home Assistant**
-2. Warte 30-60 Sekunden
-3. **Refresh Browser** (F5)
+Im Dashboard oben rechts auf **Einstellungen** klicken:
 
-✅ **FERTIG!** Das Dashboard erscheint jetzt in der Sidebar! 🎉
+1. Sensoren eintragen (Verbrauch, Erzeugung, Netzbezug, Einspeisung, ...) — beim Tippen erscheint
+   eine Autocomplete-Liste passender Entities aus deiner HA-Instanz
+2. Falls keine Wärmepumpe vorhanden: **Wärmepumpe-Tab anzeigen** ausschalten
+3. **Speichern** klicken
 
----
+Fertig — die Werte werden serverseitig gespeichert und gelten für alle Geräte, ganz ohne `config.js`.
 
-## ⚙️ Sensoren konfigurieren (1 Minute)
-
-**WICHTIG:** Passe `config.js` an deine Sensoren an!
-
-### Deine Entity-IDs finden:
-
-1. **Developer Tools** → **States** (Zustände)
-2. Suche nach: `solar`, `energy`, `consumption`
-3. Kopiere die **Entity-ID** (z.B. `sensor.solar_house_consumption_daily`)
-
-### config.js bearbeiten:
-
-Öffne `/config/www/leneda-dashboard/config.js` und trage ein:
-
-```javascript
-entities: {
-    consumption: 'sensor.DEIN_VERBRAUCH_SENSOR',    // ← HIER ändern!
-    production: 'sensor.DEINE_PV_PRODUKTION',       // ← HIER ändern!
-    exported: 'sensor.DEINE_EINSPEISUNG',           // ← HIER ändern!
-    grid_import: 'sensor.DEIN_NETZBEZUG',           // ← HIER ändern!
-}
-```
-
-**Beispiel mit deinen SolarEdge Sensoren:**
-
-```javascript
-entities: {
-    consumption: 'sensor.solar_house_consumption_daily',
-    production: 'sensor.solar_panel_to_house_daily',
-    exported: 'sensor.solar_exported_power_daily',
-    grid_import: 'sensor.solar_imported_power_daily',
-}
-```
-
-**Speichern** → **Browser Refresh** (Strg + Shift + R)
+> Nur falls du den Access Token oder UI-Feinheiten setzen willst, gibt es zusätzlich eine
+> optionale `config.js` — siehe README.md, Abschnitt "Konfiguration".
 
 ---
 
-## ✅ Fertig!
+## Fehlerbehebung
 
-Dein Dashboard sollte jetzt funktionieren mit:
+**Panel taucht nicht in der Sidebar auf**
+- `configuration.yaml`-Syntax prüfen: Entwicklerwerkzeuge → YAML → Konfiguration prüfen
+- Home Assistant wirklich neu gestartet (nicht nur Browser-Reload)?
+- Logs: Einstellungen → System → Protokolle, nach `ha_energy_dashboard` suchen
 
-- ✅ Navigation oben (Dashboard, Sensors, Invoice, Settings)
-- ✅ Zeitauswahl (Yesterday, This Week, etc.)
-- ✅ 4 Statistik-Karten mit echten Werten
-- ✅ Animiertes Energy Flow Diagramm
-- ✅ Key Metrics Sidebar
-- ✅ Energy Profile Chart
+**Panel ist da, aber oben abgeschnitten / Inhalt fehlt**
+- Browser hart neu laden (Strg+Shift+R)
+- Browser-Konsole (F12) auf Fehler prüfen
 
----
-
-## 🐛 Funktioniert nicht?
-
-### Dashboard lädt nicht / 404 Error
-
-```bash
-# Prüfe Dateipfad:
-ls -la /config/www/leneda-dashboard/
-# Du solltest sehen: index.html, styles.css, app.js, config.js
-```
-
-**Fix:**
-- Dateien richtig hochgeladen?
-- URL in `configuration.yaml` korrekt: `/local/leneda-dashboard/index.html`
-- HA neu gestartet?
-
-### Keine Daten / alles 0,00
-
-**Fix:**
-1. Öffne Browser Console (F12 → Console)
-2. Prüfe Entity-IDs:
-   ```javascript
-   // Steht dort sowas?
-   Failed to fetch: sensor.xyz
-   ```
-3. **Entity-IDs in config.js korrigieren!**
-
-### Panel nicht in Sidebar
-
-**Fix:**
-1. YAML Syntax prüfen:
-   ```
-   Developer Tools → YAML → Check Configuration
-   ```
-2. Logs ansehen:
-   ```
-   Settings → System → Logs
-   ```
-3. Browser-Cache leeren: **Strg + Shift + R**
+**Keine Daten / alles zeigt 0,00**
+- Einstellungen-Seite öffnen, Entity-IDs prüfen (Autocomplete zeigt nur existierende Sensoren)
+- F12 → Console: Fehler wie `API 404` oder `API 401` weisen auf falsche Entity-ID bzw. Auth-Problem hin
 
 ---
 
-## 📱 Bonus: Als iFrame Karte
+## Mehr Details
 
-Willst du das Dashboard in einem bestehenden Dashboard anzeigen?
-
-1. Neues Dashboard öffnen
-2. **Karte hinzufügen** → **Nach unten scrollen** → **iFrame**
-3. Eintragen:
-   ```yaml
-   type: iframe
-   url: /local/leneda-dashboard/index.html
-   aspect_ratio: "16:9"
-   ```
-
----
-
-## 🎨 Design anpassen
-
-### Farben ändern
-
-Öffne `styles.css`, suche nach `:root` und ändere:
-
-```css
-:root {
-    --accent-blue: #4a9eff;      /* Hauptfarbe */
-    --accent-red: #ef4444;       /* Consumption */
-    --accent-green: #10b981;     /* Production */
-}
-```
-
-### Animation schneller/langsamer
-
-In `config.js`:
-
-```javascript
-ui: {
-    animationSpeed: 2.0,    // 2x schneller
-    // oder
-    animationSpeed: 0.5,    // 2x langsamer
-}
-```
-
----
-
-## 📖 Mehr Details?
-
-Vollständige Anleitung: **README.md** lesen!
-
-- Alle Features erklärt
-- Fehlerbehebung im Detail
-- FAQ
-- Roadmap
-
----
-
-## 🎯 Das war's!
-
-**Du hast jetzt ein funktionierendes Leneda Energy Dashboard!** ⚡
-
-Bei Problemen: README.md lesen oder Browser Console (F12) prüfen.
-
-**Viel Spaß mit deinem neuen Dashboard! 🚀**
+Vollständige Anleitung mit allen Optionen: **README.md**

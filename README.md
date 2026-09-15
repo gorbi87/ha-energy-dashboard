@@ -24,33 +24,44 @@ Ein vollständiges Energie-Dashboard für Home Assistant mit Solar, Batterie, Ne
 
 ### Schritt 1: Repository hinzufügen
 
-1. HACS öffnen → **Integrations** (oder **Frontend**) → drei Punkte oben rechts → **Custom Repositories**
+1. HACS öffnen → drei Punkte oben rechts → **Eigene Repositories** (Custom repositories)
 2. URL eintragen: `https://github.com/gorbi87/ha-energy-dashboard`
-3. Kategorie: **Plugin**
-4. **Add** klicken
+3. Kategorie: **Integration** (nicht Plugin — das Dashboard wird als HACS-Integration installiert,
+   weil es einen eigenen Python-Backend-Teil mitbringt)
+4. **Hinzufügen** klicken
 
-### Schritt 2: Dashboard installieren
+### Schritt 2: Installieren
 
-1. In HACS nach **HA Energy Dashboard** suchen
-2. **Download** klicken
-3. HACS installiert die Dateien nach `/config/www/community/ha-energy-dashboard/`
+1. In HACS nach **HA Energy Dashboard** suchen → **Download**
+2. HACS installiert die Dateien nach `/config/custom_components/ha_energy_dashboard/`
 
 ### Schritt 3: Panel registrieren
 
 In `/config/configuration.yaml` eintragen:
 
 ```yaml
-panel_iframe:
-  energy_dashboard:
-    title: "Energie"
-    icon: mdi:solar-power-variant
-    url: /local/community/ha-energy-dashboard/index.html
+ha_energy_dashboard:
+
+panel_custom:
+  - name: energy-panel
+    sidebar_title: Energie
+    sidebar_icon: mdi:solar-power-variant
+    module_url: /ha-energy-dashboard/panel.js
+    embed_iframe: false
     require_admin: false
 ```
 
-Danach Home Assistant neu starten.
+Die leere `ha_energy_dashboard:`-Zeile ist nötig, damit HA die Integration überhaupt lädt (registriert
+die statischen Dateien unter `/ha-energy-dashboard/` sowie den Settings-API-Endpunkt) — der
+`panel_custom`-Block bindet sie dann als eigenen Sidebar-Eintrag ein.
 
-### Schritt 4: Konfiguration anlegen
+**Danach Home Assistant neu starten.** In der Sidebar erscheint ein neuer Punkt "Energie".
+
+### Schritt 4 (optional): `config.js` anlegen
+
+Nur nötig, falls du den Access Token oder die UI-Optionen (`refreshInterval` u.ä.) setzen willst —
+Sensoren selbst lassen sich seit v1.3.0 komplett über die **Einstellungen-Seite im Dashboard** eintragen,
+ganz ohne Datei-Zugriff (siehe unten).
 
 ```bash
 # Via SSH oder File Editor:
@@ -58,7 +69,7 @@ cp /config/custom_components/ha_energy_dashboard/www/config.example.js \
    /config/www/ha-energy-dashboard-config.js
 ```
 
-Dann `/config/www/ha-energy-dashboard-config.js` mit den eigenen Entity-IDs und einem Long-Lived Access Token befüllen (siehe unten).
+Dann `/config/www/ha-energy-dashboard-config.js` mit den eigenen Werten befüllen (siehe unten).
 
 > **Wichtig:** Die Konfiguration liegt in `/config/www/` — dieser Ordner wird von HACS nie angefasst, die Datei bleibt bei jedem Update erhalten.
 
