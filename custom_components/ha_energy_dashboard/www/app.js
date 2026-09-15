@@ -343,9 +343,13 @@ class EnergyDashboard {
     }
 
     // Wärmepumpe Echtzeit-Leistung
-    try {
-      this.powerData.heatpump = Math.abs(await this.getState(this._wpEntities.power) || 0);
-    } catch (e) { this.powerData.heatpump = 0; }
+    if (this.config.heatpumpEnabled ?? true) {
+      try {
+        this.powerData.heatpump = Math.abs(await this.getState(this._wpEntities.power) || 0);
+      } catch (e) { this.powerData.heatpump = 0; }
+    } else {
+      this.powerData.heatpump = 0;
+    }
 
     this.updateEnergyFlow();
   }
@@ -392,7 +396,11 @@ class EnergyDashboard {
     }
 
     // Wärmepumpe Energiedaten laden
-    await this.loadHeatpumpPeriodData(period);
+    if (this.config.heatpumpEnabled ?? true) {
+      await this.loadHeatpumpPeriodData(period);
+    } else {
+      this.heatpumpData = {};
+    }
 
     this.calculateDerivedMetrics();
 
@@ -572,10 +580,11 @@ class EnergyDashboard {
     const cum = this.config.entities?.cumulative;
     if (!cum) return;
 
+    const hpEnabled = this.config.heatpumpEnabled ?? true;
     const [consumptionStats, productionStats, wpStats] = await Promise.all([
       cum.consumption ? this.getStatistics(cum.consumption, start, end, chartPeriod) : [],
       cum.production ? this.getStatistics(cum.production, start, end, chartPeriod) : [],
-      this.getStatistics(this._wpEntities.electricTotal, start, end, chartPeriod),
+      hpEnabled ? this.getStatistics(this._wpEntities.electricTotal, start, end, chartPeriod) : [],
     ]);
 
     this.chartConsumption = this.statsToChartData(consumptionStats);
@@ -1183,6 +1192,7 @@ class EnergyDashboard {
   }
 
   updateHeatpumpTab() {
+    if (!(this.config.heatpumpEnabled ?? true)) return;
     const hp = this.heatpumpData;
     this.setEl('wp-period-label', this.getPeriodLabel(this.currentPeriod));
 
@@ -1955,7 +1965,17 @@ class EnergyDashboard {
     feedInRate: 'input_number.energyboard_feed_in_rate',
     baseFee: 'input_number.energyboard_base_fee',
     rateEntity: 'input_text.energyboard_rate_entity',
+    heatpumpEnabled: 'input_boolean.energyboard_heatpump_enabled',
   };
+
+  // Energy/cost entity IDs are stored one-per-helper (not as a JSON blob) —
+  // HA caps input_text at 255 chars, too short for 24 combined entity IDs.
+  _energyHelperId(cat, period) {
+    return `input_text.energyboard_energy_${cat}_${period}`;
+  }
+  _costHelperId(key) {
+    return `input_text.energyboard_cost_${key}`;
+  }
 
   // Field mapping: form ID → config path
   _powerFields = [
@@ -1973,15 +1993,54 @@ class EnergyDashboard {
     ['set-cum-grid-export', 'cum_grid_export'],
     ['set-battery-soc', 'battery_soc'],
   ];
+  // Field mapping: form ID → [category, period] into config.entities.energy
+  _energyFields = [
+    ['set-energy-consumption-daily', 'consumption', 'daily'],
+    ['set-energy-consumption-weekly', 'consumption', 'weekly'],
+    ['set-energy-consumption-monthly', 'consumption', 'monthly'],
+    ['set-energy-consumption-yearly', 'consumption', 'yearly'],
+    ['set-energy-production-daily', 'production', 'daily'],
+    ['set-energy-production-weekly', 'production', 'weekly'],
+    ['set-energy-production-monthly', 'production', 'monthly'],
+    ['set-energy-production-yearly', 'production', 'yearly'],
+    ['set-energy-grid-import-daily', 'grid_import', 'daily'],
+    ['set-energy-grid-import-weekly', 'grid_import', 'weekly'],
+    ['set-energy-grid-import-monthly', 'grid_import', 'monthly'],
+    ['set-energy-grid-import-yearly', 'grid_import', 'yearly'],
+    ['set-energy-grid-export-daily', 'grid_export', 'daily'],
+    ['set-energy-grid-export-weekly', 'grid_export', 'weekly'],
+    ['set-energy-grid-export-monthly', 'grid_export', 'monthly'],
+    ['set-energy-grid-export-yearly', 'grid_export', 'yearly'],
+    ['set-energy-battery-charge-daily', 'battery_charge', 'daily'],
+    ['set-energy-battery-charge-weekly', 'battery_charge', 'weekly'],
+    ['set-energy-battery-charge-monthly', 'battery_charge', 'monthly'],
+    ['set-energy-battery-charge-yearly', 'battery_charge', 'yearly'],
+    ['set-energy-battery-discharge-daily', 'battery_discharge', 'daily'],
+    ['set-energy-battery-discharge-weekly', 'battery_discharge', 'weekly'],
+    ['set-energy-battery-discharge-monthly', 'battery_discharge', 'monthly'],
+    ['set-energy-battery-discharge-yearly', 'battery_discharge', 'yearly'],
+  ];
+  // Field mapping: form ID → key into config.entities.cost
+  _costFields = [
+    ['set-cost-daily', 'daily'],
+    ['set-cost-weekly', 'weekly'],
+    ['set-cost-monthly', 'monthly'],
+    ['set-cost-yearly', 'yearly'],
+    ['set-cost-rate', 'rate'],
+    ['set-cost-compensation', 'compensation'],
+  ];
 
   async loadSettings() {
     try {
-      const [powerJson, otherJson, refLimit, elRate, fiRate] = await Promise.all([
+      const [powerJson, otherJson, refLimit, elRate, fiRate, hpEnabled, energyRaw, costRaw] = await Promise.all([
         this.getStateRaw(this._settingsHelpers.powerSensors),
         this.getStateRaw(this._settingsHelpers.otherSensors),
         this.getStateRaw(this._settingsHelpers.refLimit),
         this.getStateRaw(this._settingsHelpers.electricityRate),
         this.getStateRaw(this._settingsHelpers.feedInRate),
+        this.getStateRaw(this._settingsHelpers.heatpumpEnabled),
+        Promise.all(this._energyFields.map(([, cat, period]) => this.getStateRaw(this._energyHelperId(cat, period)))),
+        Promise.all(this._costFields.map(([, key]) => this.getStateRaw(this._costHelperId(key)))),
       ]);
 
       // Parse power sensors JSON
@@ -2015,6 +2074,30 @@ class EnergyDashboard {
         } catch (e) { /* invalid JSON, use config.js defaults */ }
       }
 
+      // Wärmepumpe an/aus (default: an, außer explizit ausgeschaltet)
+      this.config.heatpumpEnabled = hpEnabled !== 'off';
+
+      // Energy-Aggregate: ein Helper pro Entity-ID (JSON-Blob würde HA's
+      // 255-Zeichen-Limit für input_text sprengen)
+      if (!this.config.entities) this.config.entities = {};
+      if (!this.config.entities.energy) this.config.entities.energy = {};
+      this._energyFields.forEach(([, cat, period], i) => {
+        const v = energyRaw[i];
+        if (v && v !== 'unknown' && v !== '') {
+          if (!this.config.entities.energy[cat]) this.config.entities.energy[cat] = {};
+          this.config.entities.energy[cat][period] = v;
+        }
+      });
+
+      // Kosten-Sensoren: ebenfalls ein Helper pro Entity-ID
+      if (!this.config.entities.cost) this.config.entities.cost = {};
+      this._costFields.forEach(([, key], i) => {
+        const v = costRaw[i];
+        if (v && v !== 'unknown' && v !== '') {
+          this.config.entities.cost[key] = v;
+        }
+      });
+
       // Numbers
       const rl = parseFloat(refLimit);
       if (!isNaN(rl) && rl > 0) this.config.refLimit = rl;
@@ -2043,6 +2126,8 @@ class EnergyDashboard {
   populateSettingsForm() {
     const p = this.config.entities?.power || {};
     const c = this.config.entities?.cumulative || {};
+    const e = this.config.entities?.energy || {};
+    const co = this.config.entities?.cost || {};
 
     const setVal = (id, val) => {
       const el = document.getElementById(id);
@@ -2064,6 +2149,24 @@ class EnergyDashboard {
     setVal('set-cum-grid-export', c.grid_export);
     setVal('set-battery-soc', this.config.entities?.battery_soc);
 
+    // Energy-Aggregate (Tag/Woche/Monat/Jahr pro Kategorie)
+    for (const [id, cat, period] of this._energyFields) {
+      setVal(id, e[cat]?.[period]);
+    }
+
+    // Kosten-Sensoren
+    setVal('set-cost-daily', co.daily);
+    setVal('set-cost-weekly', co.weekly);
+    setVal('set-cost-monthly', co.monthly);
+    setVal('set-cost-yearly', co.yearly);
+    setVal('set-cost-rate', co.rate);
+    setVal('set-cost-compensation', co.compensation);
+
+    // Wärmepumpe an/aus
+    const hpToggle = document.getElementById('set-heatpump-enabled');
+    if (hpToggle) hpToggle.checked = this.config.heatpumpEnabled ?? true;
+    this.applyHeatpumpVisibility();
+
     // Numbers
     setVal('set-ref-limit', this.config.refLimit ?? 5);
     setVal('set-electricity-rate', this.config.electricityRate ?? 0.30);
@@ -2084,6 +2187,16 @@ class EnergyDashboard {
     const entityWrap = document.querySelector('.rate-entity-wrap');
     if (fixedInput) fixedInput.style.display = mode === 'fixed' ? '' : 'none';
     if (entityWrap) entityWrap.style.display = mode === 'entity' ? '' : 'none';
+  }
+
+  applyHeatpumpVisibility() {
+    const enabled = this.config.heatpumpEnabled ?? true;
+    document.querySelectorAll('[data-feature="heatpump"]').forEach(el => {
+      el.style.display = enabled ? '' : 'none';
+    });
+    if (!enabled && this.currentTab === 'heatpump') {
+      document.querySelector('.nav-item[data-tab="dashboard"]')?.click();
+    }
   }
 
   async saveSettings() {
@@ -2109,6 +2222,8 @@ class EnergyDashboard {
         const v = getVal(id);
         if (v) otherObj[key] = v;
       }
+
+      const heatpumpEnabled = document.getElementById('set-heatpump-enabled')?.checked ?? true;
 
       // Save all to HA helpers
       await Promise.all([
@@ -2140,10 +2255,26 @@ class EnergyDashboard {
           entity_id: this._settingsHelpers.rateEntity,
           value: getVal('set-rate-mode') === 'entity' ? getVal('set-rate-entity') : '',
         }),
+        this.callService('input_boolean', heatpumpEnabled ? 'turn_on' : 'turn_off', {
+          entity_id: this._settingsHelpers.heatpumpEnabled,
+        }),
+        ...this._energyFields.map(([id, cat, period]) =>
+          this.callService('input_text', 'set_value', {
+            entity_id: this._energyHelperId(cat, period),
+            value: getVal(id),
+          })
+        ),
+        ...this._costFields.map(([id, key]) =>
+          this.callService('input_text', 'set_value', {
+            entity_id: this._costHelperId(key),
+            value: getVal(id),
+          })
+        ),
       ]);
 
       // Update local config
       await this.loadSettings();
+      this.applyHeatpumpVisibility();
       status.textContent = 'Gespeichert!';
     } catch (e) {
       console.error('Save settings failed:', e);

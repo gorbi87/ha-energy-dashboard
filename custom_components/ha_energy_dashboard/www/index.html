@@ -43,7 +43,7 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
                     Kosten
                 </button>
-                <button class="nav-item" data-tab="heatpump">
+                <button class="nav-item" data-tab="heatpump" data-feature="heatpump">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 4l2 5-2 5h-1l2-5-2-5h1zm3 0l2 5-2 5h-1l2-5-2-5h1z"/></svg>
                     Wärmepumpe
                 </button>
@@ -126,7 +126,7 @@
                         <span class="stat-unit">kWh</span>
                     </div>
                 </div>
-                <div class="stat-card heatpump">
+                <div class="stat-card heatpump" data-feature="heatpump">
                     <div class="stat-header">
                         <span class="stat-icon">🔥</span>
                         <span class="stat-label">WÄRMEPUMPE</span>
@@ -211,12 +211,12 @@
                             </div>
 
                             <!-- Vertical connector: House → Heatpump -->
-                            <div class="flow-connector-v">
+                            <div class="flow-connector-v" data-feature="heatpump">
                                 <div class="flow-line-v flow-line-orange" id="flow-house-wp"></div>
                             </div>
 
                             <!-- Bottom: Wärmepumpe -->
-                            <div class="flow-wp-row">
+                            <div class="flow-wp-row" data-feature="heatpump">
                                 <div class="flow-node">
                                     <div class="flow-node-icon flow-icon-wp">
                                         <svg viewBox="0 0 48 48" width="48" height="48"><circle cx="24" cy="24" r="14" fill="none" stroke="#f97316" stroke-width="2"/><path d="M20 14 L24 24 L20 34" fill="none" stroke="#f97316" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M28 14 L24 24 L28 34" fill="none" stroke="#f97316" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -631,6 +631,120 @@
                     </div>
                 </div>
 
+                <!-- Energie-Aggregate -->
+                <div class="settings-section">
+                    <h3 class="settings-section-title">Energie-Aggregate (kWh) — Tag / Woche / Monat / Jahr</h3>
+                    <p class="settings-subtitle">Optional. Werden fuer die Statistik-Karten der aktuellen Zeitraeume (Heute, Diese Woche, ...) genutzt. Ohne Eintrag wird aus den kumulativen Sensoren berechnet.</p>
+
+                    <div class="settings-subgroup">
+                        <div class="settings-subgroup-title">Verbrauch</div>
+                        <div class="settings-period-row">
+                            <div class="autocomplete-wrap"><label class="settings-period-label">Tag</label><input type="text" class="settings-input entity-search" id="set-energy-consumption-daily" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
+                            <div class="autocomplete-wrap"><label class="settings-period-label">Woche</label><input type="text" class="settings-input entity-search" id="set-energy-consumption-weekly" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
+                            <div class="autocomplete-wrap"><label class="settings-period-label">Monat</label><input type="text" class="settings-input entity-search" id="set-energy-consumption-monthly" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
+                            <div class="autocomplete-wrap"><label class="settings-period-label">Jahr</label><input type="text" class="settings-input entity-search" id="set-energy-consumption-yearly" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="settings-subgroup">
+                        <div class="settings-subgroup-title">Erzeugung</div>
+                        <div class="settings-period-row">
+                            <div class="autocomplete-wrap"><label class="settings-period-label">Tag</label><input type="text" class="settings-input entity-search" id="set-energy-production-daily" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
+                            <div class="autocomplete-wrap"><label class="settings-period-label">Woche</label><input type="text" class="settings-input entity-search" id="set-energy-production-weekly" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
+                            <div class="autocomplete-wrap"><label class="settings-period-label">Monat</label><input type="text" class="settings-input entity-search" id="set-energy-production-monthly" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
+                            <div class="autocomplete-wrap"><label class="settings-period-label">Jahr</label><input type="text" class="settings-input entity-search" id="set-energy-production-yearly" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="settings-subgroup">
+                        <div class="settings-subgroup-title">Netzbezug</div>
+                        <div class="settings-period-row">
+                            <div class="autocomplete-wrap"><label class="settings-period-label">Tag</label><input type="text" class="settings-input entity-search" id="set-energy-grid-import-daily" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
+                            <div class="autocomplete-wrap"><label class="settings-period-label">Woche</label><input type="text" class="settings-input entity-search" id="set-energy-grid-import-weekly" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
+                            <div class="autocomplete-wrap"><label class="settings-period-label">Monat</label><input type="text" class="settings-input entity-search" id="set-energy-grid-import-monthly" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
+                            <div class="autocomplete-wrap"><label class="settings-period-label">Jahr</label><input type="text" class="settings-input entity-search" id="set-energy-grid-import-yearly" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="settings-subgroup">
+                        <div class="settings-subgroup-title">Einspeisung</div>
+                        <div class="settings-period-row">
+                            <div class="autocomplete-wrap"><label class="settings-period-label">Tag</label><input type="text" class="settings-input entity-search" id="set-energy-grid-export-daily" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
+                            <div class="autocomplete-wrap"><label class="settings-period-label">Woche</label><input type="text" class="settings-input entity-search" id="set-energy-grid-export-weekly" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
+                            <div class="autocomplete-wrap"><label class="settings-period-label">Monat</label><input type="text" class="settings-input entity-search" id="set-energy-grid-export-monthly" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
+                            <div class="autocomplete-wrap"><label class="settings-period-label">Jahr</label><input type="text" class="settings-input entity-search" id="set-energy-grid-export-yearly" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="settings-subgroup">
+                        <div class="settings-subgroup-title">Batterie laden</div>
+                        <div class="settings-period-row">
+                            <div class="autocomplete-wrap"><label class="settings-period-label">Tag</label><input type="text" class="settings-input entity-search" id="set-energy-battery-charge-daily" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
+                            <div class="autocomplete-wrap"><label class="settings-period-label">Woche</label><input type="text" class="settings-input entity-search" id="set-energy-battery-charge-weekly" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
+                            <div class="autocomplete-wrap"><label class="settings-period-label">Monat</label><input type="text" class="settings-input entity-search" id="set-energy-battery-charge-monthly" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
+                            <div class="autocomplete-wrap"><label class="settings-period-label">Jahr</label><input type="text" class="settings-input entity-search" id="set-energy-battery-charge-yearly" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="settings-subgroup">
+                        <div class="settings-subgroup-title">Batterie entladen</div>
+                        <div class="settings-period-row">
+                            <div class="autocomplete-wrap"><label class="settings-period-label">Tag</label><input type="text" class="settings-input entity-search" id="set-energy-battery-discharge-daily" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
+                            <div class="autocomplete-wrap"><label class="settings-period-label">Woche</label><input type="text" class="settings-input entity-search" id="set-energy-battery-discharge-weekly" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
+                            <div class="autocomplete-wrap"><label class="settings-period-label">Monat</label><input type="text" class="settings-input entity-search" id="set-energy-battery-discharge-monthly" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
+                            <div class="autocomplete-wrap"><label class="settings-period-label">Jahr</label><input type="text" class="settings-input entity-search" id="set-energy-battery-discharge-yearly" placeholder="sensor.xxx" autocomplete="off"><div class="autocomplete-list"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kosten-Sensoren -->
+                <div class="settings-section">
+                    <h3 class="settings-section-title">Kosten-Sensoren</h3>
+                    <p class="settings-subtitle">Optional. Absolute Kostensensoren (falls vorhanden) statt Berechnung aus Strompreis × Verbrauch.</p>
+                    <div class="settings-field">
+                        <label>Kosten Tag</label>
+                        <div class="autocomplete-wrap">
+                            <input type="text" class="settings-input entity-search" id="set-cost-daily" placeholder="sensor.xxx_cost_daily" autocomplete="off">
+                            <div class="autocomplete-list"></div>
+                        </div>
+                    </div>
+                    <div class="settings-field">
+                        <label>Kosten Woche</label>
+                        <div class="autocomplete-wrap">
+                            <input type="text" class="settings-input entity-search" id="set-cost-weekly" placeholder="sensor.xxx_cost_weekly" autocomplete="off">
+                            <div class="autocomplete-list"></div>
+                        </div>
+                    </div>
+                    <div class="settings-field">
+                        <label>Kosten Monat</label>
+                        <div class="autocomplete-wrap">
+                            <input type="text" class="settings-input entity-search" id="set-cost-monthly" placeholder="sensor.xxx_cost_monthly" autocomplete="off">
+                            <div class="autocomplete-list"></div>
+                        </div>
+                    </div>
+                    <div class="settings-field">
+                        <label>Kosten Jahr</label>
+                        <div class="autocomplete-wrap">
+                            <input type="text" class="settings-input entity-search" id="set-cost-yearly" placeholder="sensor.xxx_cost_yearly" autocomplete="off">
+                            <div class="autocomplete-list"></div>
+                        </div>
+                    </div>
+                    <div class="settings-field">
+                        <label>Strompreis-Sensor</label>
+                        <div class="autocomplete-wrap">
+                            <input type="text" class="settings-input entity-search" id="set-cost-rate" placeholder="sensor.xxx_cost_rate" autocomplete="off">
+                            <div class="autocomplete-list"></div>
+                        </div>
+                    </div>
+                    <div class="settings-field">
+                        <label>Verguetungs-Sensor</label>
+                        <div class="autocomplete-wrap">
+                            <input type="text" class="settings-input entity-search" id="set-cost-compensation" placeholder="sensor.xxx_compensation_rate" autocomplete="off">
+                            <div class="autocomplete-list"></div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Referenz & Kosten -->
                 <div class="settings-section">
                     <h3 class="settings-section-title">Referenz-Limit & Stromkosten</h3>
@@ -659,6 +773,18 @@
                     <div class="settings-field">
                         <label>Grundgebuehr (EUR/Monat)</label>
                         <input type="number" class="settings-input settings-number" id="set-base-fee" min="0" max="100" step="0.01" value="0">
+                    </div>
+                </div>
+
+                <!-- Wärmepumpe -->
+                <div class="settings-section">
+                    <h3 class="settings-section-title">Wärmepumpe</h3>
+                    <div class="settings-field">
+                        <label>Wärmepumpe-Tab anzeigen</label>
+                        <label class="settings-toggle">
+                            <input type="checkbox" id="set-heatpump-enabled" checked>
+                            <span class="settings-toggle-slider"></span>
+                        </label>
                     </div>
                 </div>
 

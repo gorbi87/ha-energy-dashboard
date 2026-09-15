@@ -549,6 +549,37 @@ body {
 }
 .autocomplete-item .ac-id { color: var(--text-primary); }
 .autocomplete-item .ac-name { color: var(--text-secondary); font-size: 0.7rem; }
+
+.settings-subgroup { margin-bottom: 1rem; }
+.settings-subgroup:last-child { margin-bottom: 0; }
+.settings-subgroup-title {
+  font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);
+  margin-bottom: 0.4rem;
+}
+.settings-period-row { display: flex; gap: 0.5rem; }
+.settings-period-row .autocomplete-wrap { min-width: 0; }
+.settings-period-label {
+  display: block; font-size: 0.65rem; color: var(--text-secondary);
+  margin-bottom: 0.2rem;
+}
+
+.settings-toggle {
+  position: relative; display: inline-block; width: 42px; height: 24px;
+  flex: 0 0 auto; cursor: pointer;
+}
+.settings-toggle input { opacity: 0; width: 0; height: 0; }
+.settings-toggle-slider {
+  position: absolute; inset: 0; background: var(--border-primary);
+  border-radius: 999px; transition: background 0.2s;
+}
+.settings-toggle-slider::before {
+  content: ''; position: absolute; width: 18px; height: 18px;
+  left: 3px; top: 3px; background: var(--text-primary);
+  border-radius: 50%; transition: transform 0.2s;
+}
+.settings-toggle input:checked + .settings-toggle-slider { background: var(--accent-blue); }
+.settings-toggle input:checked + .settings-toggle-slider::before { transform: translateX(18px); }
+
 .settings-actions {
   display: flex; align-items: center; gap: 1rem; margin-top: 1.25rem;
 }
@@ -637,6 +668,7 @@ body {
   .settings-field label { flex: none; }
   .settings-number { max-width: 100%; }
   .rate-mode-wrap { flex-direction: column; }
+  .settings-period-row { flex-direction: column; gap: 0.4rem; }
   .rate-mode-wrap .settings-number { flex: none; max-width: 100%; }
   .settings-select { max-width: 100%; }
 }

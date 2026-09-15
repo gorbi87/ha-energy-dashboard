@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.3.0] - 2026-09-15
+
+### Added
+- Wärmepumpe-Tab per Schalter in den Einstellungen ein-/ausschaltbar (Tab, Stat-Karte und
+  Flow-Diagramm-Knoten werden ausgeblendet, keine Anfragen mehr an nicht vorhandene Sensoren).
+- Energie-Aggregate (Tag/Woche/Monat/Jahr, 6 Kategorien) und Kosten-Sensoren (Tag/Woche/Monat/Jahr,
+  Strompreis- und Vergütungs-Sensor) jetzt über die Einstellungen-Seite konfigurierbar statt nur
+  per Hand in `config.js`.
+
+### Setup
+- Benötigt 31 neue HA-Helper (1 `input_boolean` + 30 `input_text`, Präfix `energyboard_`) für die
+  neuen Einstellungen. Diese müssen auf jeder Instanz einmalig angelegt werden (siehe README).
+
+---
+
 ## [1.2.1] - 2026-08-13
 
 ### Fixed
