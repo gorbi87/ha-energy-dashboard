@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.4.3] - 2026-09-15
+
+### Fixed
+- **Bug:** Vergangene Zeiträume (Gestern, Letzte Woche, Letzter Monat, Letztes Jahr) zeigten absurd
+  hohe Werte im MWh-Bereich statt kWh, wenn der konfigurierte kumulative Sensor tatsächlich in `Wh`
+  statt `kWh` meldet (bei einigen Integrationen/Geräten der Fall) — die HA-Statistik-"change"-Werte
+  wurden ungeprüft als kWh interpretiert. Neue `getUnitScale()`-Methode liest die tatsächliche
+  `unit_of_measurement` des Sensors und normalisiert automatisch (`Wh` → ÷1000, `MWh` → ×1000).
+  Betrifft `loadPeriodFromHistory()` (Stat-Karten für vergangene Zeiträume) und `loadChartData()`
+  (Verbrauchs-/Erzeugungs-Chart).
+
+---
+
 ## [1.4.2] - 2026-09-15
 
 ### Fixed

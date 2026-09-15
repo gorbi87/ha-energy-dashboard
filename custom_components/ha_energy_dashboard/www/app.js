@@ -207,6 +207,24 @@ class EnergyDashboard {
     }
   }
 
+  // Statistics ("change"/"sum") are unitless numbers — this dashboard always
+  // treats them as kWh. If a sensor actually reports Wh/MWh (common on
+  // instances we didn't set up ourselves), normalize so totals stay sane.
+  async getUnitScale(entityId) {
+    if (!entityId) return 1;
+    if (!this._unitScaleCache) this._unitScaleCache = {};
+    if (this._unitScaleCache[entityId] !== undefined) return this._unitScaleCache[entityId];
+    let scale = 1;
+    try {
+      const data = await this.fetchAPI(`/api/states/${entityId}`);
+      const unit = (data.attributes?.unit_of_measurement || '').toLowerCase();
+      if (unit === 'wh') scale = 0.001;
+      else if (unit === 'mwh') scale = 1000;
+    } catch (e) { /* unknown unit, assume kWh */ }
+    this._unitScaleCache[entityId] = scale;
+    return scale;
+  }
+
   async getStates(entityIds) {
     const results = {};
     const promises = entityIds.filter(Boolean).map(async id => {
@@ -425,9 +443,12 @@ class EnergyDashboard {
     if (cum) {
       const promises = Object.entries(cum).map(async ([key, entityId]) => {
         if (!entityId) return;
-        const stats = await this.getStatistics(entityId, start, end, statPeriod);
+        const [stats, scale] = await Promise.all([
+          this.getStatistics(entityId, start, end, statPeriod),
+          this.getUnitScale(entityId),
+        ]);
         if (stats.length > 0) {
-          const total = stats.reduce((acc, s) => acc + Math.max(0, s.change ?? 0), 0);
+          const total = stats.reduce((acc, s) => acc + Math.max(0, s.change ?? 0), 0) * scale;
           if (total > 0) {
             this.energyData[key] = total;
           }
@@ -438,16 +459,22 @@ class EnergyDashboard {
 
     // Also try to get battery data from daily sensors history
     if (energy?.battery_charge?.daily) {
-      const stats = await this.getStatistics(energy.battery_charge.daily, start, end, 'hour');
+      const [stats, scale] = await Promise.all([
+        this.getStatistics(energy.battery_charge.daily, start, end, 'hour'),
+        this.getUnitScale(energy.battery_charge.daily),
+      ]);
       if (stats.length > 0) {
-        const maxVal = Math.max(...stats.map(s => s.state ?? s.mean ?? 0));
+        const maxVal = Math.max(...stats.map(s => s.state ?? s.mean ?? 0)) * scale;
         if (maxVal > 0) this.energyData.battery_charge = maxVal;
       }
     }
     if (energy?.battery_discharge?.daily) {
-      const stats = await this.getStatistics(energy.battery_discharge.daily, start, end, 'hour');
+      const [stats, scale] = await Promise.all([
+        this.getStatistics(energy.battery_discharge.daily, start, end, 'hour'),
+        this.getUnitScale(energy.battery_discharge.daily),
+      ]);
       if (stats.length > 0) {
-        const maxVal = Math.max(...stats.map(s => s.state ?? s.mean ?? 0));
+        const maxVal = Math.max(...stats.map(s => s.state ?? s.mean ?? 0)) * scale;
         if (maxVal > 0) this.energyData.battery_discharge = maxVal;
       }
     }
@@ -565,14 +592,16 @@ class EnergyDashboard {
     if (!cum) return;
 
     const hpEnabled = this.config.heatpumpEnabled ?? true;
-    const [consumptionStats, productionStats, wpStats] = await Promise.all([
+    const [consumptionStats, productionStats, wpStats, consScale, prodScale] = await Promise.all([
       cum.consumption ? this.getStatistics(cum.consumption, start, end, chartPeriod) : [],
       cum.production ? this.getStatistics(cum.production, start, end, chartPeriod) : [],
       hpEnabled ? this.getStatistics(this._wpEntities.electricTotal, start, end, chartPeriod) : [],
+      this.getUnitScale(cum.consumption),
+      this.getUnitScale(cum.production),
     ]);
 
-    this.chartConsumption = this.statsToChartData(consumptionStats);
-    this.chartProduction = this.statsToChartData(productionStats);
+    this.chartConsumption = this.statsToChartData(consumptionStats, consScale);
+    this.chartProduction = this.statsToChartData(productionStats, prodScale);
     this.chartHeatpump = this.statsToChartData(wpStats);
 
     // Clear cached kW data (lazy-loaded on toggle)
@@ -589,10 +618,10 @@ class EnergyDashboard {
     this.renderChart();
   }
 
-  statsToChartData(stats) {
+  statsToChartData(stats, scale = 1) {
     return stats.map(s => ({
       x: new Date(s.start).getTime(),
-      y: Math.max(0, s.change ?? s.mean ?? 0),
+      y: Math.max(0, s.change ?? s.mean ?? 0) * scale,
     }));
   }
 
