@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.4.0] - 2026-09-15
+
+### Changed
+- Einstellungen-Persistenz komplett auf einen eigenen Backend-Endpunkt umgestellt
+  (`/api/ha_energy_dashboard/settings`, JSON-Datei über HA's `Store`-Helper) statt HA-Helper-Entities.
+  Alle 38 `energyboard_*`-Helper (7 aus v1.2.x + 31 aus v1.3.0) entfallen ersatzlos — die
+  Einstellungen-Seite funktioniert direkt nach der Installation, ohne jegliches Setup.
+- Grund: `input_text` ist bei HA auf 255 Zeichen begrenzt, zu wenig für die kombinierten
+  Energie-/Kosten-Entity-IDs aus v1.3.0.
+
+### Setup
+- Da der neue Endpunkt Teil des Python-Backends ist, braucht dieses Update (anders als reine
+  HTML/CSS/JS-Änderungen) einen **HA-Neustart**.
+- Bereits über v1.3.0 angelegte `energyboard_*`-Helper können danach gelöscht werden — sie werden
+  nicht mehr gelesen.
+
+---
+
 ## [1.3.0] - 2026-09-15
 
 ### Added
@@ -8,10 +26,6 @@
 - Energie-Aggregate (Tag/Woche/Monat/Jahr, 6 Kategorien) und Kosten-Sensoren (Tag/Woche/Monat/Jahr,
   Strompreis- und Vergütungs-Sensor) jetzt über die Einstellungen-Seite konfigurierbar statt nur
   per Hand in `config.js`.
-
-### Setup
-- Benötigt 31 neue HA-Helper (1 `input_boolean` + 30 `input_text`, Präfix `energyboard_`) für die
-  neuen Einstellungen. Diese müssen auf jeder Instanz einmalig angelegt werden (siehe README).
 
 ---
 

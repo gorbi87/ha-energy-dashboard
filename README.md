@@ -99,141 +99,11 @@ Die vollständige Konfiguration mit allen Optionen ist in `config.example.js` do
 
 ---
 
-## Einstellungen-Seite (optional, empfohlen für mehrere Instanzen)
+## Einstellungen-Seite
 
-Alternativ zu `config.js` lassen sich die meisten Sensoren auch direkt im Dashboard unter **Einstellungen** eintragen — praktisch, wenn man das Dashboard auf einer zweiten HA-Instanz (z.B. bei Familie/Freunden) einrichtet, ohne Dateien anzufassen. Dafür müssen einmalig folgende Helper existieren. Am einfachsten: Block in `configuration.yaml` einfügen und HA neu starten.
+Alternativ zu `config.js` lassen sich alle Sensoren, Tarife und der Wärmepumpe-Schalter auch direkt im Dashboard unter **Einstellungen** eintragen — praktisch, wenn man das Dashboard auf einer zweiten HA-Instanz (z.B. bei Familie/Freunden) einrichtet, ohne Dateien anzufassen. Es sind keine HA-Helper oder sonstige Vorbereitung nötig: Die Integration bringt dafür einen eigenen kleinen API-Endpunkt (`/api/ha_energy_dashboard/settings`) mit, der die Einstellungen serverseitig als JSON speichert.
 
-```yaml
-input_boolean:
-  energyboard_heatpump_enabled:
-    name: Energyboard Heatpump Enabled
-    icon: mdi:heat-pump
-
-input_number:
-  energyboard_reference_limit:
-    name: Energyboard Reference Limit
-    min: 0
-    max: 50
-    step: 0.5
-  energyboard_electricity_rate:
-    name: Energyboard Electricity Rate
-    min: 0
-    max: 1
-    step: 0.01
-  energyboard_feed_in_rate:
-    name: Energyboard Feed In Rate
-    min: 0
-    max: 1
-    step: 0.01
-  energyboard_base_fee:
-    name: Energyboard Base Fee
-    min: 0
-    max: 100
-    step: 0.01
-
-input_text:
-  energyboard_power_sensors:
-    name: Energyboard Power Sensors
-    max: 255
-  energyboard_other_sensors:
-    name: Energyboard Other Sensors
-    max: 255
-  energyboard_rate_entity:
-    name: Energyboard Rate Entity
-    max: 255
-  energyboard_energy_consumption_daily:
-    name: Energyboard Energy Consumption Daily
-    max: 255
-  energyboard_energy_consumption_weekly:
-    name: Energyboard Energy Consumption Weekly
-    max: 255
-  energyboard_energy_consumption_monthly:
-    name: Energyboard Energy Consumption Monthly
-    max: 255
-  energyboard_energy_consumption_yearly:
-    name: Energyboard Energy Consumption Yearly
-    max: 255
-  energyboard_energy_production_daily:
-    name: Energyboard Energy Production Daily
-    max: 255
-  energyboard_energy_production_weekly:
-    name: Energyboard Energy Production Weekly
-    max: 255
-  energyboard_energy_production_monthly:
-    name: Energyboard Energy Production Monthly
-    max: 255
-  energyboard_energy_production_yearly:
-    name: Energyboard Energy Production Yearly
-    max: 255
-  energyboard_energy_grid_import_daily:
-    name: Energyboard Energy Grid Import Daily
-    max: 255
-  energyboard_energy_grid_import_weekly:
-    name: Energyboard Energy Grid Import Weekly
-    max: 255
-  energyboard_energy_grid_import_monthly:
-    name: Energyboard Energy Grid Import Monthly
-    max: 255
-  energyboard_energy_grid_import_yearly:
-    name: Energyboard Energy Grid Import Yearly
-    max: 255
-  energyboard_energy_grid_export_daily:
-    name: Energyboard Energy Grid Export Daily
-    max: 255
-  energyboard_energy_grid_export_weekly:
-    name: Energyboard Energy Grid Export Weekly
-    max: 255
-  energyboard_energy_grid_export_monthly:
-    name: Energyboard Energy Grid Export Monthly
-    max: 255
-  energyboard_energy_grid_export_yearly:
-    name: Energyboard Energy Grid Export Yearly
-    max: 255
-  energyboard_energy_battery_charge_daily:
-    name: Energyboard Energy Battery Charge Daily
-    max: 255
-  energyboard_energy_battery_charge_weekly:
-    name: Energyboard Energy Battery Charge Weekly
-    max: 255
-  energyboard_energy_battery_charge_monthly:
-    name: Energyboard Energy Battery Charge Monthly
-    max: 255
-  energyboard_energy_battery_charge_yearly:
-    name: Energyboard Energy Battery Charge Yearly
-    max: 255
-  energyboard_energy_battery_discharge_daily:
-    name: Energyboard Energy Battery Discharge Daily
-    max: 255
-  energyboard_energy_battery_discharge_weekly:
-    name: Energyboard Energy Battery Discharge Weekly
-    max: 255
-  energyboard_energy_battery_discharge_monthly:
-    name: Energyboard Energy Battery Discharge Monthly
-    max: 255
-  energyboard_energy_battery_discharge_yearly:
-    name: Energyboard Energy Battery Discharge Yearly
-    max: 255
-  energyboard_cost_daily:
-    name: Energyboard Cost Daily
-    max: 255
-  energyboard_cost_weekly:
-    name: Energyboard Cost Weekly
-    max: 255
-  energyboard_cost_monthly:
-    name: Energyboard Cost Monthly
-    max: 255
-  energyboard_cost_yearly:
-    name: Energyboard Cost Yearly
-    max: 255
-  energyboard_cost_rate:
-    name: Energyboard Cost Rate
-    max: 255
-  energyboard_cost_compensation:
-    name: Energyboard Cost Compensation
-    max: 255
-```
-
-Danach im Dashboard unter **Einstellungen**:
+Im Dashboard unter **Einstellungen**:
 - Sensoren eintragen (Leistung, kumulative Energie, Energie-Aggregate, Kosten) — Tippen zeigt eine Autocomplete-Liste passender HA-Entities
 - **Wärmepumpe-Tab anzeigen** ausschalten, falls keine Wärmepumpe vorhanden ist (blendet Tab, Stat-Karte und Flow-Diagramm-Knoten aus)
 - **Speichern** klicken
@@ -241,6 +111,8 @@ Danach im Dashboard unter **Einstellungen**:
 Werte, die hier eingetragen werden, überschreiben die Defaults aus `config.js`. Leer gelassene Felder fallen auf `config.js` zurück.
 
 > Die Wärmepumpe selbst (13 Daikin-Sensoren) ist aktuell nur über den Schalter ein-/ausschaltbar, die Sensor-Zuordnung ist noch fest in `app.js` (`_wpEntities`) verdrahtet — für eine andere Wärmepumpen-Marke müsste das noch konfigurierbar gemacht werden.
+>
+> Da der Endpunkt Teil des Python-Backends ist (`custom_components/ha_energy_dashboard/__init__.py`), braucht ein Update dieses Teils — anders als reine HTML/CSS/JS-Änderungen — einen **HA-Neustart** (HACS zeigt das nach dem Update an).
 
 ---
 

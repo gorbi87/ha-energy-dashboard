@@ -197,22 +197,6 @@ class EnergyDashboard {
     return res.json();
   }
 
-  async getStateRaw(entityId) {
-    try {
-      const data = await this.fetchAPI(`/api/states/${entityId}`);
-      return data.state ?? '';
-    } catch (e) {
-      return '';
-    }
-  }
-
-  async callService(domain, service, data) {
-    return this.fetchAPI(`/api/services/${domain}/${service}`, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  }
-
   async getState(entityId) {
     try {
       const data = await this.fetchAPI(`/api/states/${entityId}`);
@@ -1955,27 +1939,11 @@ class EnergyDashboard {
   }
 
   // ── Settings ──────────────────────────────────────────────────
-
-  // Helper entity IDs
-  _settingsHelpers = {
-    powerSensors: 'input_text.energyboard_power_sensors',
-    otherSensors: 'input_text.energyboard_other_sensors',
-    refLimit: 'input_number.energyboard_reference_limit',
-    electricityRate: 'input_number.energyboard_electricity_rate',
-    feedInRate: 'input_number.energyboard_feed_in_rate',
-    baseFee: 'input_number.energyboard_base_fee',
-    rateEntity: 'input_text.energyboard_rate_entity',
-    heatpumpEnabled: 'input_boolean.energyboard_heatpump_enabled',
-  };
-
-  // Energy/cost entity IDs are stored one-per-helper (not as a JSON blob) —
-  // HA caps input_text at 255 chars, too short for 24 combined entity IDs.
-  _energyHelperId(cat, period) {
-    return `input_text.energyboard_energy_${cat}_${period}`;
-  }
-  _costHelperId(key) {
-    return `input_text.energyboard_cost_${key}`;
-  }
+  // Persisted server-side as one JSON blob via the integration's own
+  // /api/ha_energy_dashboard/settings endpoint (custom_components/.../__init__.py).
+  // No HA helpers required — avoids input_text's 255-char cap and any
+  // per-instance helper setup.
+  _settingsUrl = '/api/ha_energy_dashboard/settings';
 
   // Field mapping: form ID → config path
   _powerFields = [
@@ -2032,94 +2000,48 @@ class EnergyDashboard {
 
   async loadSettings() {
     try {
-      const [powerJson, otherJson, refLimit, elRate, fiRate, hpEnabled, energyRaw, costRaw] = await Promise.all([
-        this.getStateRaw(this._settingsHelpers.powerSensors),
-        this.getStateRaw(this._settingsHelpers.otherSensors),
-        this.getStateRaw(this._settingsHelpers.refLimit),
-        this.getStateRaw(this._settingsHelpers.electricityRate),
-        this.getStateRaw(this._settingsHelpers.feedInRate),
-        this.getStateRaw(this._settingsHelpers.heatpumpEnabled),
-        Promise.all(this._energyFields.map(([, cat, period]) => this.getStateRaw(this._energyHelperId(cat, period)))),
-        Promise.all(this._costFields.map(([, key]) => this.getStateRaw(this._costHelperId(key)))),
-      ]);
+      const saved = await this.fetchAPI(this._settingsUrl);
+      const s = (saved && typeof saved === 'object') ? saved : {};
 
-      // Parse power sensors JSON
-      if (powerJson && powerJson !== 'unknown' && powerJson !== '') {
-        try {
-          const ps = JSON.parse(powerJson);
-          if (!this.config.entities) this.config.entities = {};
-          if (!this.config.entities.power) this.config.entities.power = {};
-          const p = this.config.entities.power;
-          if (ps.consumption) p.consumption = ps.consumption;
-          if (ps.production) p.production = ps.production;
-          if (ps.grid_import) p.grid_import = ps.grid_import;
-          if (ps.grid_export) p.grid_export = ps.grid_export;
-          if (ps.battery_charge) p.battery_charge = ps.battery_charge;
-          if (ps.battery_discharge) p.battery_discharge = ps.battery_discharge;
-        } catch (e) { /* invalid JSON, use config.js defaults */ }
-      }
-
-      // Parse other sensors JSON
-      if (otherJson && otherJson !== 'unknown' && otherJson !== '') {
-        try {
-          const os = JSON.parse(otherJson);
-          if (!this.config.entities) this.config.entities = {};
-          if (!this.config.entities.cumulative) this.config.entities.cumulative = {};
-          const c = this.config.entities.cumulative;
-          if (os.cum_consumption) c.consumption = os.cum_consumption;
-          if (os.cum_production) c.production = os.cum_production;
-          if (os.cum_grid_import) c.grid_import = os.cum_grid_import;
-          if (os.cum_grid_export) c.grid_export = os.cum_grid_export;
-          if (os.battery_soc) this.config.entities.battery_soc = os.battery_soc;
-        } catch (e) { /* invalid JSON, use config.js defaults */ }
-      }
-
-      // Wärmepumpe an/aus (default: an, außer explizit ausgeschaltet)
-      this.config.heatpumpEnabled = hpEnabled !== 'off';
-
-      // Energy-Aggregate: ein Helper pro Entity-ID (JSON-Blob würde HA's
-      // 255-Zeichen-Limit für input_text sprengen)
       if (!this.config.entities) this.config.entities = {};
-      if (!this.config.entities.energy) this.config.entities.energy = {};
-      this._energyFields.forEach(([, cat, period], i) => {
-        const v = energyRaw[i];
-        if (v && v !== 'unknown' && v !== '') {
-          if (!this.config.entities.energy[cat]) this.config.entities.energy[cat] = {};
-          this.config.entities.energy[cat][period] = v;
-        }
-      });
 
-      // Kosten-Sensoren: ebenfalls ein Helper pro Entity-ID
-      if (!this.config.entities.cost) this.config.entities.cost = {};
-      this._costFields.forEach(([, key], i) => {
-        const v = costRaw[i];
-        if (v && v !== 'unknown' && v !== '') {
-          this.config.entities.cost[key] = v;
+      if (s.entities?.power) {
+        this.config.entities.power = { ...(this.config.entities.power || {}), ...s.entities.power };
+      }
+      if (s.entities?.cumulative) {
+        this.config.entities.cumulative = { ...(this.config.entities.cumulative || {}), ...s.entities.cumulative };
+      }
+      if (s.entities?.battery_soc) {
+        this.config.entities.battery_soc = s.entities.battery_soc;
+      }
+      if (s.entities?.energy) {
+        if (!this.config.entities.energy) this.config.entities.energy = {};
+        for (const [cat, periods] of Object.entries(s.entities.energy)) {
+          this.config.entities.energy[cat] = { ...(this.config.entities.energy[cat] || {}), ...periods };
         }
-      });
+      }
+      if (s.entities?.cost) {
+        this.config.entities.cost = { ...(this.config.entities.cost || {}), ...s.entities.cost };
+      }
 
       // Numbers
-      const rl = parseFloat(refLimit);
-      if (!isNaN(rl) && rl > 0) this.config.refLimit = rl;
-      const er = parseFloat(elRate);
-      if (!isNaN(er) && er > 0) this.config.electricityRate = er;
-      const fi = parseFloat(fiRate);
-      if (!isNaN(fi) && fi > 0) this.config.feedInRate = fi;
+      if (typeof s.refLimit === 'number' && s.refLimit > 0) this.config.refLimit = s.refLimit;
+      if (typeof s.electricityRate === 'number' && s.electricityRate > 0) this.config.electricityRate = s.electricityRate;
+      if (typeof s.feedInRate === 'number' && s.feedInRate >= 0) this.config.feedInRate = s.feedInRate;
+      if (typeof s.baseFee === 'number' && s.baseFee >= 0) this.config.baseFee = s.baseFee;
 
-      const bf = parseFloat(await this.getStateRaw(this._settingsHelpers.baseFee));
-      if (!isNaN(bf) && bf >= 0) this.config.baseFee = bf;
+      // Wärmepumpe an/aus (default: an, außer explizit ausgeschaltet)
+      this.config.heatpumpEnabled = s.heatpumpEnabled !== false;
 
       // Rate entity mode: if an entity is configured, read rate from it
-      const rateEntityId = await this.getStateRaw(this._settingsHelpers.rateEntity);
-      if (rateEntityId && rateEntityId !== 'unknown' && rateEntityId !== '') {
-        this.config.rateEntity = rateEntityId;
-        const entityRate = await this.getState(rateEntityId);
+      this.config.rateEntity = s.rateEntity || '';
+      if (this.config.rateEntity) {
+        const entityRate = await this.getState(this.config.rateEntity);
         if (entityRate > 0) this.config.electricityRate = entityRate;
-      } else {
-        this.config.rateEntity = '';
       }
     } catch (e) {
       console.warn('Settings load failed, using config.js defaults:', e.message);
+      if (this.config.heatpumpEnabled === undefined) this.config.heatpumpEnabled = true;
     }
   }
 
@@ -2209,68 +2131,60 @@ class EnergyDashboard {
     try {
       const getVal = (id) => (document.getElementById(id)?.value || '').trim();
 
-      // Build power sensors JSON
+      // Power sensors
       const powerObj = {};
       for (const [id, key] of this._powerFields) {
         const v = getVal(id);
         if (v) powerObj[key] = v;
       }
 
-      // Build other sensors JSON
-      const otherObj = {};
+      // Cumulative sensors + battery SoC (_otherFields keys are 'cum_x' / 'battery_soc')
+      const cumulativeObj = {};
+      let batterySoc = '';
       for (const [id, key] of this._otherFields) {
         const v = getVal(id);
-        if (v) otherObj[key] = v;
+        if (!v) continue;
+        if (key === 'battery_soc') batterySoc = v;
+        else cumulativeObj[key.replace('cum_', '')] = v;
+      }
+
+      // Energy-Aggregate (nested: Kategorie → Zeitraum)
+      const energyObj = {};
+      for (const [id, cat, period] of this._energyFields) {
+        const v = getVal(id);
+        if (v) {
+          if (!energyObj[cat]) energyObj[cat] = {};
+          energyObj[cat][period] = v;
+        }
+      }
+
+      // Kosten-Sensoren
+      const costObj = {};
+      for (const [id, key] of this._costFields) {
+        const v = getVal(id);
+        if (v) costObj[key] = v;
       }
 
       const heatpumpEnabled = document.getElementById('set-heatpump-enabled')?.checked ?? true;
 
-      // Save all to HA helpers
-      await Promise.all([
-        this.callService('input_text', 'set_value', {
-          entity_id: this._settingsHelpers.powerSensors,
-          value: JSON.stringify(powerObj),
+      await this.fetchAPI(this._settingsUrl, {
+        method: 'POST',
+        body: JSON.stringify({
+          entities: {
+            power: powerObj,
+            cumulative: cumulativeObj,
+            battery_soc: batterySoc,
+            energy: energyObj,
+            cost: costObj,
+          },
+          refLimit: parseFloat(getVal('set-ref-limit')) || 5,
+          electricityRate: parseFloat(getVal('set-electricity-rate')) || 0.30,
+          feedInRate: parseFloat(getVal('set-feed-in-rate')) || 0.08,
+          baseFee: parseFloat(getVal('set-base-fee')) || 0,
+          rateEntity: getVal('set-rate-mode') === 'entity' ? getVal('set-rate-entity') : '',
+          heatpumpEnabled,
         }),
-        this.callService('input_text', 'set_value', {
-          entity_id: this._settingsHelpers.otherSensors,
-          value: JSON.stringify(otherObj),
-        }),
-        this.callService('input_number', 'set_value', {
-          entity_id: this._settingsHelpers.refLimit,
-          value: parseFloat(getVal('set-ref-limit')) || 5,
-        }),
-        this.callService('input_number', 'set_value', {
-          entity_id: this._settingsHelpers.electricityRate,
-          value: parseFloat(getVal('set-electricity-rate')) || 0.30,
-        }),
-        this.callService('input_number', 'set_value', {
-          entity_id: this._settingsHelpers.feedInRate,
-          value: parseFloat(getVal('set-feed-in-rate')) || 0.08,
-        }),
-        this.callService('input_number', 'set_value', {
-          entity_id: this._settingsHelpers.baseFee,
-          value: parseFloat(getVal('set-base-fee')) || 0,
-        }),
-        this.callService('input_text', 'set_value', {
-          entity_id: this._settingsHelpers.rateEntity,
-          value: getVal('set-rate-mode') === 'entity' ? getVal('set-rate-entity') : '',
-        }),
-        this.callService('input_boolean', heatpumpEnabled ? 'turn_on' : 'turn_off', {
-          entity_id: this._settingsHelpers.heatpumpEnabled,
-        }),
-        ...this._energyFields.map(([id, cat, period]) =>
-          this.callService('input_text', 'set_value', {
-            entity_id: this._energyHelperId(cat, period),
-            value: getVal(id),
-          })
-        ),
-        ...this._costFields.map(([id, key]) =>
-          this.callService('input_text', 'set_value', {
-            entity_id: this._costHelperId(key),
-            value: getVal(id),
-          })
-        ),
-      ]);
+      });
 
       // Update local config
       await this.loadSettings();
