@@ -2030,6 +2030,12 @@ class EnergyDashboard {
       if (typeof s.feedInRate === 'number' && s.feedInRate >= 0) this.config.feedInRate = s.feedInRate;
       if (typeof s.baseFee === 'number' && s.baseFee >= 0) this.config.baseFee = s.baseFee;
 
+      // Anzeige
+      if (typeof s.ui?.refreshInterval === 'number' && s.ui.refreshInterval > 0) {
+        if (!this.config.ui) this.config.ui = {};
+        this.config.ui.refreshInterval = s.ui.refreshInterval;
+      }
+
       // Wärmepumpe an/aus (default: an, außer explizit ausgeschaltet)
       this.config.heatpumpEnabled = s.heatpumpEnabled !== false;
 
@@ -2094,6 +2100,7 @@ class EnergyDashboard {
     setVal('set-electricity-rate', this.config.electricityRate ?? 0.30);
     setVal('set-feed-in-rate', this.config.feedInRate ?? 0.08);
     setVal('set-base-fee', this.config.baseFee ?? 0);
+    setVal('set-refresh-interval', (this.config.ui?.refreshInterval ?? 30000) / 1000);
 
     // Rate mode
     const hasEntity = this.config.rateEntity && this.config.rateEntity !== '';
@@ -2183,12 +2190,16 @@ class EnergyDashboard {
           baseFee: parseFloat(getVal('set-base-fee')) || 0,
           rateEntity: getVal('set-rate-mode') === 'entity' ? getVal('set-rate-entity') : '',
           heatpumpEnabled,
+          ui: {
+            refreshInterval: (parseFloat(getVal('set-refresh-interval')) || 30) * 1000,
+          },
         }),
       });
 
       // Update local config
       await this.loadSettings();
       this.applyHeatpumpVisibility();
+      this.startAutoRefresh();
       status.textContent = 'Gespeichert!';
     } catch (e) {
       console.error('Save settings failed:', e);

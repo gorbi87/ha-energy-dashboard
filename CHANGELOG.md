@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.1] - 2026-09-15
+
+### Added
+- Aktualisierungsintervall (bisher nur in `config.js` als `ui.refreshInterval`) jetzt in den
+  Einstellungen editierbar (Sekunden, wirkt sofort nach dem Speichern ohne Reload).
+
+### Note
+- `ui.animationSpeed`, `ui.chartHeight` und `ui.locale` bleiben vorerst nur in `config.js`
+  dokumentiert — sie werden im Code aktuell gar nicht ausgelesen, wären also totes UI gewesen.
+
+---
+
 ## [1.4.0] - 2026-09-15
 
 ### Changed
