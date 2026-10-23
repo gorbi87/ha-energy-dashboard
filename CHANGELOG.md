@@ -1,5 +1,18 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- **Logo-Link** (Einstellungen → Darstellung): Tippen auf das Logo öffnet eine einstellbare Seite,
+  z. B. die eigene HA-Startseite. HA-Pfade (`/…`) öffnen ohne Neuladen im HA-Frontend,
+  volle Adressen (`https://…`) im ganzen Fenster; leer = wie bisher. Andere Angaben
+  (z. B. `javascript:` oder `//host`) werden ignoriert.
+
+### Changed
+- **Kopfleiste schmal** (Handy, HA-App) wie bei den Panels Heizung und Beregnung: Logo oben,
+  Reiter in einer eigenen Zeile darunter (nur Symbole, der aktive mit Namen). Der ☰-Knopf entfällt,
+  das HA-Menü öffnet per Wischen vom linken Rand.
+
 ## [1.6.1] - 2026-10-18
 
 ### Fixed
