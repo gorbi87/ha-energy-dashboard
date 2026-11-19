@@ -76,10 +76,8 @@ class EnergyDashboard {
     const hass = this._parentHass();
     if (hass?.auth?.data?.access_token) {
       this._useParentAuth = true;
-      if (hass.auth.expired) {
-        try { await hass.auth.refreshAccessToken(); } catch (e) { /* ignore */ }
-      }
       this.token = hass.auth.data.access_token;
+      await this._ensureFreshToken();
       if (await this._testAuth()) return;
       this._useParentAuth = false;
       this.token = null;
@@ -95,6 +93,7 @@ class EnergyDashboard {
           if (t.access_token && typeof t.access_token === 'string') {
             this.token = t.access_token;
             this._refreshToken = t.refresh_token;
+            this._tokenExpires = t.expires || 0;
             if (t.clientId) this._clientId = t.clientId;
             break;
           }
@@ -114,6 +113,7 @@ class EnergyDashboard {
 
     // 4. Verify token works
     if (this.token) {
+      await this._ensureFreshToken();
       const valid = await this._testAuth();
       if (valid) return;
       // Token expired — try refresh
@@ -164,16 +164,49 @@ class EnergyDashboard {
       const data = await res.json();
       this.token = data.access_token;
       this._refreshToken = data.refresh_token;
+      this._tokenExpires = this._expiresAt(data);
       try {
         localStorage.setItem('dashboardTokens', JSON.stringify({
           access_token: data.access_token,
           refresh_token: data.refresh_token,
+          expires: this._tokenExpires,
         }));
       } catch (e) { /* ignore */ }
     } catch (e) { /* ignore */ }
   }
 
-  async refreshAccessToken() {
+  _expiresAt(data) {
+    return data.expires_in ? Date.now() + data.expires_in * 1000 : 0;
+  }
+
+  // Abgelaufenes Token vor dem Senden erneuern. HA wertet jede Anfrage mit
+  // abgelaufenem Token als Fehlversuch und meldet „Login attempt failed“.
+  async _ensureFreshToken() {
+    const margin = 60000;
+    if (this._useParentAuth) {
+      const auth = this._parentHass()?.auth;
+      if (!auth) return;
+      const expires = auth.data?.expires;
+      if (auth.expired || (expires && Date.now() > expires - margin)) {
+        await this.refreshAccessToken();
+      }
+      if (auth.data?.access_token) this.token = auth.data.access_token;
+    } else if (this._refreshToken && this._tokenExpires
+        && Date.now() > this._tokenExpires - margin) {
+      await this.refreshAccessToken();
+    }
+  }
+
+  // Gleichzeitige Aufrufer teilen sich eine Erneuerung
+  refreshAccessToken() {
+    if (!this._refreshPromise) {
+      this._refreshPromise = this._doRefreshAccessToken()
+        .finally(() => { this._refreshPromise = null; });
+    }
+    return this._refreshPromise;
+  }
+
+  async _doRefreshAccessToken() {
     // bei Frontend-Anmeldung erneuert HA (bzw. die App) das Token
     if (this._useParentAuth) {
       try {
@@ -195,10 +228,12 @@ class EnergyDashboard {
       const data = await res.json();
       this.token = data.access_token;
       if (data.refresh_token) this._refreshToken = data.refresh_token;
+      this._tokenExpires = this._expiresAt(data);
       try {
         localStorage.setItem('dashboardTokens', JSON.stringify({
           access_token: data.access_token,
           refresh_token: this._refreshToken,
+          expires: this._tokenExpires,
         }));
       } catch (e) { /* ignore */ }
       return true;
@@ -208,11 +243,7 @@ class EnergyDashboard {
   // ── REST API ──────────────────────────────────────────────────
 
   async fetchAPI(path, options = {}) {
-    // immer das aktuelle Token des Frontends verwenden
-    if (this._useParentAuth) {
-      const t = this._parentHass()?.auth?.data?.access_token;
-      if (t) this.token = t;
-    }
+    await this._ensureFreshToken();
     const headers = {};
     if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
     headers['Content-Type'] = 'application/json';
@@ -298,6 +329,7 @@ class EnergyDashboard {
 
   connectWebSocket() {
     return new Promise((resolve) => {
+      this._wsReady = false;
       // Close stale socket first
       if (this.ws) {
         try { this.ws.onclose = null; this.ws.close(); } catch (_) {}
@@ -318,6 +350,7 @@ class EnergyDashboard {
       this.ws.onopen = () => {};
       this.ws.onerror = () => { done(); };
       this.ws.onclose = () => {
+        this._wsReady = false;
         done();
         // Only auto-reconnect if page is visible
         if (document.visibilityState === 'visible') {
@@ -328,8 +361,14 @@ class EnergyDashboard {
         const msg = JSON.parse(event.data);
         if (msg.type === 'auth_required') {
           if (!this.token) { console.error('WS: no token'); this.ws.close(); done(); return; }
-          this.ws.send(JSON.stringify({ type: 'auth', access_token: this.token }));
+          const ws = this.ws;
+          this._ensureFreshToken().catch(() => {}).then(() => {
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({ type: 'auth', access_token: this.token }));
+            }
+          });
         } else if (msg.type === 'auth_ok') {
+          this._wsReady = true;
           done();
         } else if (msg.type === 'auth_invalid') {
           console.error('WebSocket auth failed');
@@ -344,12 +383,22 @@ class EnergyDashboard {
     });
   }
 
-  wsCommand(cmd) {
+  // Verbindung bei Bedarf neu aufbauen. onclose verbindet nur bei sichtbarer
+  // Seite neu – ging die Verbindung im Hintergrund (Ruhezustand) verloren, blieb
+  // sie weg und alle Statistikabfragen lieferten still leere Listen (0 kWh).
+  async ensureWebSocket() {
+    const ok = () => !!(this.ws && this.ws.readyState === WebSocket.OPEN && this._wsReady);
+    if (ok()) return true;
+    if (!this._wsConnecting) {
+      this._wsConnecting = this.connectWebSocket().finally(() => { this._wsConnecting = null; });
+    }
+    await this._wsConnecting;
+    return ok();
+  }
+
+  async wsCommand(cmd) {
+    if (!(await this.ensureWebSocket())) throw new Error('WebSocket not connected');
     return new Promise((resolve, reject) => {
-      if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-        reject(new Error('WebSocket not connected'));
-        return;
-      }
       const id = this.wsId++;
       cmd.id = id;
       this.wsPending[id] = { resolve, reject };
@@ -2775,6 +2824,9 @@ class EnergyDashboard {
         document.body.classList.add('page-hidden');
       } else {
         document.body.classList.remove('page-hidden');
+        if (!(this.ws && this.ws.readyState === WebSocket.OPEN && this._wsReady)) {
+          this.ensureWebSocket().then((ok) => { if (ok) this.loadPeriodData(this.currentPeriod); });
+        }
       }
     });
     window.addEventListener('pageshow', (e) => {
